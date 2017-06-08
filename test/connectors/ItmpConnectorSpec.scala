@@ -16,15 +16,13 @@
 
 package connectors
 
-import org.joda.time.DateTime
-import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -35,8 +33,6 @@ class ItmpConnectorSpec extends PlaySpec
 
 
   val jsVal: JsValue = Json.obj("field" -> "value").as[JsValue]
-  val jsFailure: JsValue = Json.obj("field" -> "value").as[JsValue]
-  val lisaRef: String = "Z123456"
 
   "Subscription endpoint" should {
     "Return a status 202" when {
@@ -52,7 +48,7 @@ class ItmpConnectorSpec extends PlaySpec
           )
 
         doSubcribe { response =>
-          response.status must be (OK)
+          response.status must be (ACCEPTED)
         }
       }
       }

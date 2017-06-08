@@ -40,7 +40,7 @@ trait ItmpConnector extends ServicesConfig {
       authorization = Some(Authorization(s"Bearer ${AppContext.desAuthToken}")))
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$subscribeUrl/$lisaManager/subscribe"
+    val uri = s"$subscribeUrl/$lisaManager/subscription"
     Logger.info(s"DES Connector get subscription ${uri}")
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }
