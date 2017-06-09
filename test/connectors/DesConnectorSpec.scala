@@ -137,6 +137,7 @@ class DesConnectorSpec extends PlaySpec
 
     callback(response)
   }
+
   private def doInvalidRegister(callback: HttpResponse => Unit) = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString.replace("utr","otr"))
     val response = Await.result(SUT.register("Z019283", jsVal), Duration.Inf)
