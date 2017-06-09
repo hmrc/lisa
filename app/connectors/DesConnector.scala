@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
 
 import scala.concurrent.Future
 
-trait ItmpConnector extends ServicesConfig {
+trait DesConnector extends ServicesConfig {
 
   val httpPost:HttpPost = WSHttp
   lazy val desUrl = baseUrl("des")
@@ -45,6 +45,13 @@ trait ItmpConnector extends ServicesConfig {
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }
 
+  def register(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val uri = s"$subscribeUrl/$lisaManager/registration"
+    Logger.info(s"DES Connector get subscription ${uri}")
+    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
+  }
+
+
 }
 
-object ItmpConnector extends ItmpConnector
+object DesConnector extends DesConnector

@@ -1,0 +1,15 @@
+{
+  "utr": "1234567890",
+  "safeId": "XE0001234567890",
+  "approvalNumber": "123456",
+  "companyName": "abcdefghijk",
+  "applicantDetails": {
+    "name": "abcdefghijklmnopqrst",
+    "surname": "abcdefgh",
+    "position": "abcdefghijklmnopq",
+    "contactDetails": {
+      "phoneNumber": "1234 567 890",
+      "emailAddress": "abc@def.com"
+    }
+  }
+}
