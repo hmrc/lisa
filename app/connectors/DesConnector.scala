@@ -45,8 +45,8 @@ trait DesConnector extends ServicesConfig {
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }
 
-  def register(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$subscribeUrl/$lisaManager/registration"
+  def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val uri = s"$subscribeUrl/registration/utr/$utr"
     Logger.info(s"DES Connector get subscription ${uri}")
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }

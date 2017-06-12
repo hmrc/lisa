@@ -46,18 +46,19 @@ class DesConnectorSpec extends PlaySpec
           )
 
         doSubcribe { response =>
-          response.status must be (ACCEPTED)
+          response.status must be(ACCEPTED)
         }
       }
-      }
-    "Return a status 400" when {
+    }
+    "Return a status 503" when {
       "invalid json posted" in {
         when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = BAD_REQUEST,
-                responseJson = Some(Json.parse(s"""
+                responseStatus = SERVICE_UNAVAILABLE,
+                responseJson = Some(Json.parse(
+                  s"""
                 {
                   "code": "SERVICE_UNAVAILABLE",
                   "reason": "Dependent systems are currently not responding."
@@ -68,38 +69,66 @@ class DesConnectorSpec extends PlaySpec
           )
 
         doInvalidSubscribe { response =>
-          response.status must be (BAD_REQUEST)
+          response.status must be(SERVICE_UNAVAILABLE)
         }
       }
-      }
     }
+  }
 
   "Registration endpoint" should {
-    "Return a status 202" when {
+    "Return a status 200" when {
       "Valid json posted" in {
         when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = ACCEPTED,
-                responseJson = Some(Json.parse(s"""{"safeID": "928282776"}"""))
+                responseStatus = OK,
+                responseJson = Some(Json.parse(
+                  s"""{
+                        "safeId": "XE0001234567890",
+                        "agentReferenceNumber": "AARN1234567",
+                        "isEditable": true,
+                        "isAnAgent": false,
+                        "isAnASAgent": false,
+                        "isAnIndividual": true,
+                        "individual": {
+                          "firstName": "Stephen",
+                          "lastName": "Wood",
+                          "dateOfBirth": "1990-04-03"
+                        },
+                        "address": {
+                          "addressLine1": "100 SuttonStreet",
+                          "addressLine2": "Wokingham",
+                          "addressLine3": "Surrey",
+                          "addressLine4": "London",
+                          "postalCode": "DH14EJ",
+                          "countryCode": "GB"
+                        },
+                        "contactDetails": {
+                          "primaryPhoneNumber": "01332752856",
+                          "secondaryPhoneNumber": "07782565326",
+                          "faxNumber": "01332754256",
+                          "emailAddress": "stephen@manncorpone.co.uk"
+                        }
+                      }""".stripMargin))
               )
             )
           )
 
         doRegister { response =>
-          response.status must be (ACCEPTED)
+          response.status must be(OK)
         }
       }
-      }
-    "Return a status 400" when {
+    }
+    "Return a status 503" when {
       "invalid json posted" in {
         when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = BAD_REQUEST,
-                responseJson = Some(Json.parse(s"""
+                responseStatus = SERVICE_UNAVAILABLE,
+                responseJson = Some(Json.parse(
+                  s"""
                 {
                   "code": "SERVICE_UNAVAILABLE",
                   "reason": "Dependent systems are currently not responding."
@@ -110,7 +139,7 @@ class DesConnectorSpec extends PlaySpec
           )
 
         doInvalidRegister { response =>
-          response.status must be (BAD_REQUEST)
+          response.status must be(SERVICE_UNAVAILABLE)
         }
       }
     }
@@ -132,14 +161,14 @@ class DesConnectorSpec extends PlaySpec
   }
 
   private def doInvalidSubscribe(callback: HttpResponse => Unit) = {
-    val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString.replace("utr","otr"))
+    val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString.replace("utr", "otr"))
     val response = Await.result(SUT.subscribe("Z019283", jsVal), Duration.Inf)
 
     callback(response)
   }
 
   private def doInvalidRegister(callback: HttpResponse => Unit) = {
-    val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString.replace("utr","otr"))
+    val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString.replace("utr", "otr"))
     val response = Await.result(SUT.register("Z019283", jsVal), Duration.Inf)
 
     callback(response)
@@ -153,7 +182,6 @@ class DesConnectorSpec extends PlaySpec
   object SUT extends DesConnector {
     override val httpPost = mockHttpPost
   }
-
 
 
 }
