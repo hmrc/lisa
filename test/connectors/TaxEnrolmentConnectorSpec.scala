@@ -22,6 +22,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.ACCEPTED
+import play.api.test.Helpers.BAD_REQUEST
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpResponse}
 
 import scala.concurrent.{Await, Future}
@@ -45,6 +46,23 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
 
         doEnrolmentStatus { response =>
           response.status must be (ACCEPTED)
+        }
+      }
+      }
+    "Return status 400" when {
+      "When error returned from tax enrolment" in {
+        when(mockHttpPost.POSTEmpty[HttpResponse](any())(any(), any()))
+          .thenReturn(
+            Future.successful(
+              HttpResponse(
+                responseStatus = BAD_REQUEST,
+                responseJson = Some(Json.parse(s"""{"code": "INTERNAL_ERROR"}"""))
+              )
+            )
+          )
+
+        doEnrolmentStatus { response =>
+          response.status must be (BAD_REQUEST)
         }
       }
       }
