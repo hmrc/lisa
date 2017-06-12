@@ -29,7 +29,8 @@ trait DesConnector extends ServicesConfig {
 
   val httpPost:HttpPost = WSHttp
   lazy val desUrl = baseUrl("des")
-  lazy val subscribeUrl = s"$desUrl/lifetime-isa/manager"
+  lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
+  lazy val registrationUrl = s"$desUrl/registration/organisation"
 
   val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
@@ -40,13 +41,13 @@ trait DesConnector extends ServicesConfig {
       authorization = Some(Authorization(s"Bearer ${AppContext.desAuthToken}")))
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$subscribeUrl/$lisaManager/subscription"
+    val uri = s"$subscriptionUrl/$lisaManager/subscription"
     Logger.info(s"DES Connector get subscription ${uri}")
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$subscribeUrl/registration/utr/$utr"
+    val uri = s"$registrationUrl/utr/$utr"
     Logger.info(s"DES Connector get subscription ${uri}")
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }

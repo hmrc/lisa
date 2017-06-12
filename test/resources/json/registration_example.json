@@ -1,5 +1,9 @@
 {
-  "utr": "123455",
-  "company_name": "ABC",
-  "company_type": "Limited"
+  "regime": "LISA",
+  "requiresNameMatch": true,
+  "isAnAgent": false,
+  "organisation": {
+    "organisationName": "ABC",
+    "organisationType": "CORPORATE",
+  }
 }
