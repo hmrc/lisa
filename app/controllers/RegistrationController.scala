@@ -17,10 +17,12 @@
 package controllers
 
 import connectors.DesConnector
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.Logger
+import play.api.mvc._
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait RegistrationController extends BaseController {
@@ -35,9 +37,11 @@ trait RegistrationController extends BaseController {
   def performRegister(utr: String)(implicit request:Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map {
       response =>
-
+        Logger.info(s"The connector has returned ${response.status} for ${utr}")
+        Results.Status(response.status)(response.body)
     }
-  }
+  } recover {
+    case _ => InternalServerError("""{"code":"SERVER_ERROR","reason":"Dependent systems are currently not responding"}""") }
 }
 
 object RegistrationController extends RegistrationController
