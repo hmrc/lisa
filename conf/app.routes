@@ -1,3 +1,6 @@
 # microservice specific routes
 
 
+GET        /:utr/register             @controllers.ROSMController.register(utr:String)
+
+POST        /:utr/subscribe             @controllers.ROSMController.submitSubscription(utr:String)

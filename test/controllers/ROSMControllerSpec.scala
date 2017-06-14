@@ -35,7 +35,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
 
-class RegistrationControllerSpec extends PlaySpec
+class ROSMControllerSpec extends PlaySpec
   with MockitoSugar
   with OneAppPerSuite with BeforeAndAfterEach {
 
@@ -47,10 +47,11 @@ class RegistrationControllerSpec extends PlaySpec
 
   val regPayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString
   val regErrorJson: String = Source.fromInputStream(getClass().getResourceAsStream("/json/utr_error.json")).mkString
+  val subscribePayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString
 
-  "The register controller" should {
-    "Return 200 and valid payload" when {
-      "called with a valid resquest" in {
+  "The ROSMController " should {
+    "should register" when {
+      "called with a valid JSON payload" in {
         val jsVal: JsValue = Json.parse(regPayload)
         val utr: String = "1234567890"
         when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(jsVal))))
@@ -64,8 +65,23 @@ class RegistrationControllerSpec extends PlaySpec
       }
     }
 
-    "Return 400 and Invalid UTR as code" when {
-      "called with a valid resquest" in {
+    "subscribe" when {
+      "called with a valid JSON payload" in {
+        val jsVal: JsValue = Json.parse(subscribePayload)
+        val utr: String = "1234567890"
+        when(mockDesConnector.subscribe(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+
+        doSubscribe(utr, subscribePayload) { res =>
+
+          status(res) mustBe(OK)
+          (contentAsJson(res) \ "subscriptionId").as[String] mustBe ("928282776")
+        }
+
+      }
+    }
+
+    "400 Response with a Invalid UTR as code" when {
+      "called with a valid JSON payload" in {
         println("Json is " + regErrorJson)
         val regJson: JsValue = Json.parse(regErrorJson)
         val utr: String = "1234567890"
@@ -83,7 +99,7 @@ class RegistrationControllerSpec extends PlaySpec
     }
 
     "Return 500 error thrown on connector" when {
-      "called with a valid resquest" in {
+      "called with a valid JSON Payload" in {
         println("Json is " + regErrorJson)
         val regJson: JsValue = Json.parse(regErrorJson)
         val utr: String = "1234567890"
@@ -106,8 +122,14 @@ class RegistrationControllerSpec extends PlaySpec
     callback(Future(res))
   }
 
+  def doSubscribe(utr: String, payload: String)(callback: (Future[Result]) => Unit) {
+    val res = await(SUT.submitSubscription(utr).apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson(payload)))))
+
+    callback(Future(res))
+  }
+
   val mockDesConnector = mock[DesConnector]
-  val SUT = new RegistrationController {
+  val SUT = new ROSMController {
     override val connector: DesConnector = mockDesConnector
   }
 }
