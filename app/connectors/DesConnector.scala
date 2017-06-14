@@ -22,6 +22,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Authorization
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
@@ -46,10 +47,16 @@ trait DesConnector extends ServicesConfig {
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
   }
 
+
+
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
     Logger.info(s"DES Connector get subscription ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
+    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
+      response
+    } recover {
+      case e: Exception => throw e
+    }
   }
 
 
