@@ -23,7 +23,7 @@ import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.ACCEPTED
 import play.api.test.Helpers.BAD_REQUEST
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpResponse}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
@@ -34,7 +34,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   "TaxEnrolment endpoint" should {
     "Return status 200" when {
       "Valid json is posted" in {
-        when(mockHttpPost.POSTEmpty[HttpResponse](any())(any(), any()))
+        when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -51,7 +51,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
       }
     "Return status 400" when {
       "When error returned from tax enrolment" in {
-        when(mockHttpPost.POSTEmpty[HttpResponse](any())(any(), any()))
+        when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -75,12 +75,12 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     callback(response)
   }
 
-  val mockHttpPost = mock[HttpPost]
+  val mockHttpGet = mock[HttpGet]
 
   implicit val hc = HeaderCarrier()
 
   object SUT extends TaxEnrolmentConnector {
-    override val httpPost = mockHttpPost
+    override val httpGet = mockHttpGet
   }
 
 }
