@@ -21,23 +21,23 @@ import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Authorization
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
 
 trait TaxEnrolmentConnector extends ServicesConfig{
-  val httpPost:HttpPost = WSHttp
+  val httpGet: HttpGet = WSHttp
   lazy val desUrl = baseUrl("des")
-  lazy val subscribeUrl = s"$desUrl/tax-enrolments/businesspartners"
+  lazy val subscribeUrl = s"$desUrl"
 
   val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-      val uri = s"$subscribeUrl/$groupId/subscriptions"
+      val uri = s"$subscribeUrl/groups/$groupId/subscriptions"
       Logger.info(s"DES Connector get subscription ${uri}")
-      httpPost.POSTEmpty(uri)(httpReads, hc)
+      httpGet.GET(uri)(httpReads, hc)
   }
   
 }
