@@ -123,7 +123,7 @@ class ROSMControllerSpec extends PlaySpec
   }
 
   def doSubscribe(utr: String, payload: String)(callback: (Future[Result]) => Unit) {
-    val res = await(SUT.submitSubscription(utr).apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson(payload)))))
+    val res = await(SUT.submitSubscription(utr,"Z1234").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson(payload)))))
 
     callback(Future(res))
   }
