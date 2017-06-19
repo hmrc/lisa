@@ -1,3 +1,4 @@
 # microservice specific routes
 
 
+GET /tax-enrolments/groups/:groupId/subscriptions   @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
