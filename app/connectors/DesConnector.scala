@@ -43,19 +43,24 @@ trait DesConnector extends ServicesConfig {
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
-    Logger.info(s"DES Connector get subscription ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc))
+    Logger.info(s"DES Connector post subscription ${uri}")
+    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
+      response
+    } recover {
+      case e: Exception => Logger.error(s"Error in Desconnector subscribe: ${e.getMessage}")
+        throw e
+    }
   }
-
 
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
-    Logger.info(s"DES Connector get subscription ${uri}")
+    Logger.info(s"DES Connector post registerOnce ${uri}")
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
       response
     } recover {
-      case e: Exception => throw e
+      case e: Exception => Logger.error(s"Error in Desconnector register : ${e.getMessage}")
+        throw e
     }
   }
 
