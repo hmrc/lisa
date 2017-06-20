@@ -25,11 +25,11 @@ import uk.gov.hmrc.play.microservice.controller.BaseController
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait RegistrationController extends BaseController {
+class ROSMController extends BaseController {
 
   val connector: DesConnector = DesConnector
 
-  def register(utr: String)(implicit hc: HeaderCarrier) = Action.async { implicit request =>
+  def register(utr: String) = Action.async { implicit request =>
     performRegister(utr)(request)
 
   }
@@ -41,7 +41,19 @@ trait RegistrationController extends BaseController {
         Results.Status(response.status)(response.body)
     }
   } recover {
-    case _ => InternalServerError("""{"code":"SERVER_ERROR","reason":"Dependent systems are currently not responding"}""") }
+    case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""") }
+
+
+  def submitSubscription(utr: String,lisaManagerRef:String)  = Action.async { implicit request =>
+    connector.subscribe(lisaManagerRef, request.body.asJson.get).map {
+      response =>
+        Logger.info(s"submitSubscription : Response from Connector ${response.status} for ${utr}")
+        Results.Status(response.status)(response.body)
+    }recover {
+      case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""") }
+  }
+
+
 }
 
-object RegistrationController extends RegistrationController
+//object ROSMController extends ROSMController
