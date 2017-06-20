@@ -1,4 +1,5 @@
 # microservice specific routes
 
 
-GET /tax-enrolments/groups/:groupId/subscriptions   @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
+GET /tax-enrolments/groups/:groupId/subscriptions               @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
+PUT /tax-enrolments/subscription/:subscriptionId/subscriber     @controllers.TaxEnrolmentController.subscribe(subscriptionId: String)
