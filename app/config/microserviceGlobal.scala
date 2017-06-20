@@ -18,6 +18,8 @@ package config
 
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{RequestHeader, Result, Results}
 import play.api.{Application, Configuration, Play}
 import uk.gov.hmrc.play.audit.filters.AuditFilter
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
@@ -26,6 +28,8 @@ import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
+
+import scala.concurrent.Future
 
 
 object ControllerConfiguration extends ControllerConfig {
@@ -61,4 +65,11 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
   override val microserviceAuditFilter = MicroserviceAuditFilter
 
   override val authFilter = Some(MicroserviceAuthFilter)
+
+  private val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
+
+  override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
+    super.onError(request, ex)
+    Future.successful(Results.InternalServerError(errorJson))
+  }
 }

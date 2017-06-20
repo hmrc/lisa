@@ -27,19 +27,21 @@ import scala.concurrent.Future
 
 trait TaxEnrolmentConnector extends ServicesConfig{
   val httpGet: HttpGet = WSHttp
-  lazy val desUrl = baseUrl("des")
-  lazy val subscribeUrl = s"$desUrl"
+  val httpPut: HttpPut = WSHttp
 
-  val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse) = response
-  }
+  lazy val taxEnrolmentServiceUrl: String = baseUrl("tax-enrolments")
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-      val uri = s"$subscribeUrl/groups/$groupId/subscriptions"
-      Logger.info(s"DES Connector get subscription ${uri}")
-      httpGet.GET(uri)(httpReads, hc)
+    val uri = s"$taxEnrolmentServiceUrl/groups/$groupId/subscriptions"
+    Logger.info(s"Tax Enrolment connector get subscriptions $uri")
+    httpGet.GET(uri)
   }
-  
+
+  def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val uri = s"$taxEnrolmentServiceUrl/subscription/$subscriptionId/subscriber"
+    Logger.info(s"Tax Enrolment connector put subscribe $uri")
+    httpPut.PUT(uri, body)
+  }
 }
 
 object TaxEnrolmentConnector extends TaxEnrolmentConnector

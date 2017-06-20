@@ -20,20 +20,19 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
-import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.ACCEPTED
-import play.api.test.Helpers.BAD_REQUEST
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import play.api.libs.json.Json
+import play.api.mvc.AnyContent
+import play.api.test.Helpers.{ACCEPTED, _}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
-import scala.io.Source
+import scala.concurrent.{Await, Future}
 
 class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPerTest{
 
-  "TaxEnrolment endpoint" should {
-    "Return status 200" when {
-      "Valid json is posted" in {
+  "Get enrolment status" should {
+    "return a success verbatim" when {
+      "a successful response is returned from tax enrolment" in {
         when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
           .thenReturn(
             Future.successful(
@@ -46,41 +45,89 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
 
         doEnrolmentStatus { response =>
           response.status must be (ACCEPTED)
+          Json.parse(response.body) mustBe Json.parse(s"""{"status": "PENDING"}""")
         }
       }
-      }
-    "Return status 400" when {
-      "When error returned from tax enrolment" in {
+    }
+    "return an error verbatim" when {
+      "an error is returned from tax enrolment" in {
         when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = BAD_REQUEST,
+                responseStatus = INTERNAL_SERVER_ERROR,
                 responseJson = Some(Json.parse(s"""{"code": "INTERNAL_ERROR"}"""))
               )
             )
           )
 
         doEnrolmentStatus { response =>
-          response.status must be (BAD_REQUEST)
+          response.status must be (INTERNAL_SERVER_ERROR)
+          Json.parse(response.body) mustBe Json.parse(s"""{"code": "INTERNAL_ERROR"}""")
         }
       }
+    }
+  }
+
+  "Subscribe" should {
+    "return a success verbatim" when {
+      "a successful response is returned from tax enrolment" in {
+        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any()))
+          .thenReturn(
+            Future.successful(
+              HttpResponse(
+                responseStatus = NO_CONTENT,
+                responseJson = None
+              )
+            )
+          )
+
+        doSubscribe { response =>
+          response.status must be (NO_CONTENT)
+          response.body must be (null)
+        }
       }
     }
+    "return an error verbatim" when {
+      "an error is returned from tax enrolment" in {
+        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any()))
+          .thenReturn(
+            Future.successful(
+              HttpResponse(
+                responseStatus = INTERNAL_SERVER_ERROR,
+                responseJson = Some(Json.parse(s"""{"code": "INTERNAL_ERROR"}"""))
+              )
+            )
+          )
 
+        doSubscribe { response =>
+          response.status must be (INTERNAL_SERVER_ERROR)
+          Json.parse(response.body) mustBe Json.parse(s"""{"code": "INTERNAL_ERROR"}""")
+        }
+      }
+    }
+  }
 
   private def doEnrolmentStatus(callback: HttpResponse => Unit) = {
-    val response = Await.result(SUT.enrolmentStatus("Z019283"), Duration.Inf)
+    val response = Await.result(SUT.enrolmentStatus("Z0192"), Duration.Inf)
 
     callback(response)
   }
 
-  val mockHttpGet = mock[HttpGet]
+  private def doSubscribe(callback: HttpResponse => Unit) = {
+    val response = Await.result(SUT.subscribe("1234567890", Json.parse("{}")), Duration.Inf)
+
+    callback(response)
+  }
+
+  val mockHttpGet: HttpGet = mock[HttpGet]
+  val mockHttpPut: HttpPut = mock[HttpPut]
 
   implicit val hc = HeaderCarrier()
 
   object SUT extends TaxEnrolmentConnector {
-    override val httpGet = mockHttpGet
+    override val httpGet: HttpGet = mockHttpGet
+    override val httpPut: HttpPut = mockHttpPut
   }
 
 }
