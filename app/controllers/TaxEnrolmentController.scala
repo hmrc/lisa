@@ -18,13 +18,11 @@ package controllers
 
 import connectors.TaxEnrolmentConnector
 import play.api.Logger
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class TaxEnrolmentController extends BaseController {
 
@@ -32,7 +30,7 @@ class TaxEnrolmentController extends BaseController {
   val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
-    connector.enrolmentStatus(groupId).map {
+    connector.enrolmentStatus(groupId)(hc).map {
       response =>
         Logger.info(s"The connector has returned ${response.status} for $groupId")
         Results.Status(response.status)(response.body)
@@ -40,10 +38,16 @@ class TaxEnrolmentController extends BaseController {
   }
 
   def subscribe(subscriptionId: String): Action[AnyContent] = Action.async { implicit request =>
-    connector.subscribe(subscriptionId, request.body.asJson.get).map {
+    connector.subscribe(subscriptionId, request.body.asJson.get)(hc).map {
       response =>
         Logger.info(s"The connector has returned ${response.status} for $subscriptionId")
-        Results.Status(response.status)(response.body)
+
+        response.status match {
+          case NoContent.header.status => NoContent
+          case _ => InternalServerError
+        }
+    } recover {
+      case _ => InternalServerError
     }
   }
 
