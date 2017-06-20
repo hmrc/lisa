@@ -47,8 +47,10 @@ trait DesConnector extends ServicesConfig {
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
       response
     } recover {
+      // $COVERAGE-OFF$
       case e: Exception => Logger.error(s"Error in Desconnector subscribe: ${e.getMessage}")
         throw e
+      // $COVERAGE-ON$
     }
   }
 
@@ -59,8 +61,10 @@ trait DesConnector extends ServicesConfig {
     httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
       response
     } recover {
+      // $COVERAGE-OFF$
       case e: Exception => Logger.error(s"Error in Desconnector register : ${e.getMessage}")
         throw e
+      // $COVERAGE-ON$
     }
   }
 
