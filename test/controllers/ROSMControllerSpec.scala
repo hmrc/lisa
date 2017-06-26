@@ -17,7 +17,7 @@
 package controllers
 
 import com.sun.scenario.effect.impl.sw.java.JSWBlend_EXCLUSIONPeer
-import connectors.DesConnector
+import connectors.{DesConnector, TaxEnrolmentConnector}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
@@ -29,7 +29,7 @@ import play.api.test._
 import org.mockito.Matchers._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsJson, Result}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
@@ -49,87 +49,148 @@ class ROSMControllerSpec extends PlaySpec
   val regErrorJson: String = Source.fromInputStream(getClass().getResourceAsStream("/json/utr_error.json")).mkString
   val subscribePayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString
 
-  "The ROSMController " should {
-    "should register" when {
-      "called with a valid JSON payload" in {
-        val jsVal: JsValue = Json.parse(regPayload)
-        val utr: String = "1234567890"
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(jsVal))))
+  "Register endpoint" should {
 
-        doRegister(utr, regPayload) { res =>
+    "return a 200 ok response" when {
+      "everything is valid and no errors are thrown" in {
+        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(Json.parse("{}")))))
 
-          status(res) mustBe(OK)
-          (contentAsJson(res) \ "regime").as[String] mustBe ("LISA")
+        doRegister() { res =>
+          status(res) mustBe OK
         }
-
       }
     }
 
-    "subscribe" when {
-      "called with a valid JSON payload" in {
-        val jsVal: JsValue = Json.parse(subscribePayload)
-        val utr: String = "1234567890"
-        when(mockDesConnector.subscribe(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+    "return a 400 error response with Invalid UTR as the response code" when {
+      "the connector returns a 400 response" in {
+        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST,Some(Json.parse(regErrorJson)))))
 
-        doSubscribe(utr, subscribePayload) { res =>
-
-          status(res) mustBe(OK)
-          (contentAsJson(res) \ "subscriptionId").as[String] mustBe ("928282776")
+        doRegister() { res =>
+          status(res) mustBe BAD_REQUEST
+          (contentAsJson(res) \ "code").as[String] mustBe "INVALID_UTR"
         }
-
       }
     }
 
-    "400 Response with a Invalid UTR as code" when {
-      "called with a valid JSON payload" in {
-        println("Json is " + regErrorJson)
-        val regJson: JsValue = Json.parse(regErrorJson)
-        val utr: String = "1234567890"
-
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST,Some(regJson))))
-
-        doRegister(utr, regPayload) { res =>
-
-          status(res) mustBe(BAD_REQUEST)
-          (contentAsJson(res) \ "code").as[String] mustBe ("INVALID_UTR")
-
-        }
-
-      }
-    }
-
-    "Return 500 error thrown on connector" when {
-      "called with a valid JSON Payload" in {
-        println("Json is " + regErrorJson)
-        val regJson: JsValue = Json.parse(regErrorJson)
-        val utr: String = "1234567890"
-
+    "return a 500 error response" when {
+      "the connector returns an error" in {
         when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.failed(new Exception("Error")))
 
-        doRegister(utr, regPayload) { res =>
-
-          status(res) mustBe(INTERNAL_SERVER_ERROR)
-
+        doRegister() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
         }
-
       }
     }
+
   }
 
-  def doRegister(utr: String, payload: String)(callback: (Future[Result]) => Unit) {
-    val res = await(SUT.register(utr).apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson(payload)))))
+  "Subscribe endpoint" should {
+
+    "return a 200 ok response with the subscriptionId" when {
+      "everything is valid and no errors are thrown" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+
+        doSubscribe() { res =>
+          status(res) mustBe (OK)
+          (contentAsJson(res) \ "subscriptionId").as[String] mustBe "928282776"
+        }
+      }
+    }
+
+    "return a 500 internal server error response" when {
+
+      "the call to des fails" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
+
+        doSubscribe() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        }
+      }
+
+      "the call to des returns an unexpected status code" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+
+        doSubscribe() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        }
+      }
+
+      "the call to tax enrolments fails" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+
+        doSubscribe() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        }
+      }
+
+      "the call to tax enrolments returns an unexpected status code" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(OK, responseString = Some("A 204 (No Content) the only valid response"))))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+
+        doSubscribe() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        }
+      }
+
+      "the response from des does not contain a subscriptionId" in {
+        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+
+        when(mockDesConnector.subscribe(any(), any())(any())).
+          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{}""")))))
+
+        doSubscribe() { res =>
+          status(res) mustBe INTERNAL_SERVER_ERROR
+          (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        }
+      }
+
+    }
+
+  }
+
+  def doRegister()(callback: (Future[Result]) => Unit) {
+    val res = await(SUT.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
 
     callback(Future(res))
   }
 
-  def doSubscribe(utr: String, payload: String)(callback: (Future[Result]) => Unit) {
-    val res = await(SUT.submitSubscription(utr,"Z1234").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson(payload)))))
+  def doSubscribe()(callback: (Future[Result]) => Unit) {
+    val res = await(SUT.submitSubscription("1234567890", "Z1234").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
 
     callback(Future(res))
   }
 
-  val mockDesConnector = mock[DesConnector]
-  val SUT = new ROSMController {
+  private val mockDesConnector = mock[DesConnector]
+  private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
+
+  private val SUT = new ROSMController {
     override val connector: DesConnector = mockDesConnector
+    override val enrolmentConnector: TaxEnrolmentConnector = mockEnrolmentConnector
   }
+
 }

@@ -41,36 +41,31 @@ class TaxEnrolmentControllerSpec extends PlaySpec
     reset(mockConnector)
   }
 
-  "Tax Enrolment Controller" should {
-    "return 204 NO CONTENT" when {
-      "204 is returned from the connector" in {
-        when(mockConnector.subscribe(any(), any())(any())).thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+  "Get Enrolments for Group ID" should {
+    "return the status and body as returned from the connector" when {
+      "no errors occur" in {
+        when(mockConnector.enrolmentStatus(any())(any())).thenReturn(Future.successful(HttpResponse(OK, responseString = Some("test"))))
 
-        val res = doSubscribe()
+        val res = doGetSubscriptionsForGroupId()
 
-        status(res) mustBe NO_CONTENT
+        status(res) mustBe OK
+        contentAsString(res) mustBe "test"
       }
     }
-    "return 500 INTERNAL SERVER ERROR" when {
-      "any other status is returned from the connector" in {
-        when(mockConnector.subscribe(any(), any())(any())).thenReturn(Future.successful(HttpResponse(OK)))
+    "return appropriate 500 internal server error response" when {
+      "any errors occur" in {
+        when(mockConnector.enrolmentStatus(any())(any())).thenReturn(Future.failed(Upstream4xxResponse("fail", BAD_REQUEST, BAD_REQUEST)))
 
-        val res = doSubscribe()
-
-        status(res) mustBe INTERNAL_SERVER_ERROR
-      }
-      "any exceptions occur in the connector" in {
-        when(mockConnector.subscribe(any(), any())(any())).thenReturn(Future.failed(Upstream4xxResponse("fail", BAD_REQUEST, BAD_REQUEST)))
-
-        val res = doSubscribe()
+        val res = doGetSubscriptionsForGroupId()
 
         status(res) mustBe INTERNAL_SERVER_ERROR
+        contentAsJson(res) mustBe Json.parse("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     }
   }
 
-  private def doSubscribe() = {
-    SUT.subscribe("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.toJson("{}"))))
+  private def doGetSubscriptionsForGroupId() = {
+    SUT.getSubscriptionsForGroupId("1234567890").apply(FakeRequest(Helpers.GET, "/"))
   }
 
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]

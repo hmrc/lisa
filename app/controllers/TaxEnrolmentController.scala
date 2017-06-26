@@ -34,20 +34,8 @@ class TaxEnrolmentController extends BaseController {
       response =>
         Logger.info(s"The connector has returned ${response.status} for $groupId")
         Results.Status(response.status)(response.body)
-    }
-  }
-
-  def subscribe(subscriptionId: String): Action[AnyContent] = Action.async { implicit request =>
-    connector.subscribe(subscriptionId, request.body.asJson.get)(hc).map {
-      response =>
-        Logger.info(s"The connector has returned ${response.status} for $subscriptionId")
-
-        response.status match {
-          case NoContent.header.status => NoContent
-          case _ => InternalServerError
-        }
     } recover {
-      case _ => InternalServerError
+      case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
     }
   }
 
