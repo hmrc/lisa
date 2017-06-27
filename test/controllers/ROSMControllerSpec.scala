@@ -93,10 +93,10 @@ class ROSMControllerSpec extends PlaySpec
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
 
         doSubscribe() { res =>
-          status(res) mustBe (OK)
+          status(res) mustBe (ACCEPTED)
           (contentAsJson(res) \ "subscriptionId").as[String] mustBe "928282776"
         }
       }
