@@ -29,7 +29,7 @@ trait TaxEnrolmentConnector extends ServicesConfig{
   val httpGet: HttpGet = WSHttp
   val httpPut: HttpPut = WSHttp
 
-  lazy val taxEnrolmentServiceUrl: String = baseUrl("tax-enrolments")
+  lazy val taxEnrolmentServiceUrl: String = baseUrl("tax-enrolments") + "/tax-enrolments"
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentServiceUrl/groups/$groupId/subscriptions"
