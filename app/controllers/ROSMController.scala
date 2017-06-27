@@ -51,7 +51,7 @@ class ROSMController extends BaseController {
       Logger.info(s"submitSubscription : Response from Connector ${response.status} for $utr")
 
       response.status match {
-        case OK => {
+        case ACCEPTED => {
           val success = Results.Status(response.status)(response.body)
           val safeId = (requestJson \ "safeId").as[String]
           val subscriptionId = (response.json \ "subscriptionId").as[String]
