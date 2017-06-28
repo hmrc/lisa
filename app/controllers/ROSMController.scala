@@ -25,6 +25,7 @@ import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 class ROSMController extends BaseController {
 
@@ -56,11 +57,15 @@ class ROSMController extends BaseController {
           val safeId = (requestJson \ "safeId").as[String]
           val subscriptionId = (response.json \ "subscriptionId").as[String]
 
+          Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
           submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
         }
       }
     } recover {
-      case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+      case NonFatal(ex:Throwable) => {
+        Logger.info(s"submitSubscription: Failed - ${ex.getMessage}")
+        InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+      }
     }
   }
 
