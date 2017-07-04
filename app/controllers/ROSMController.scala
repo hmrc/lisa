@@ -70,7 +70,7 @@ class ROSMController extends BaseController {
   }
 
   private def submitTaxEnrolmentSubscription(subscriptionId: String, safeId: String, success: Result)(implicit hc: HeaderCarrier): Future[Result] = {
-    val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> "", "etmpId" -> safeId)
+    val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> "http://", "etmpId" -> safeId)
 
     enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
       Logger.info(s"submitSubscription : Tax Enrolments : Response from Connector ${enrolRes.status} for $subscriptionId")
