@@ -1,5 +1,5 @@
 # microservice specific routes
 
-GET     /tax-enrolments/groups/:groupId/subscriptions               @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
 POST    /:utr/register                                              @controllers.ROSMController.register(utr: String)
+GET     /tax-enrolments/groups/:groupId/subscriptions               @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
 POST    /:utr/subscribe/:lisaManagerRef                             @controllers.ROSMController.submitSubscription(utr: String, lisaManagerRef: String)

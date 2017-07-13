@@ -16,21 +16,26 @@
 
 package controllers
 
+
+import config.AuthConnector
 import connectors.TaxEnrolmentConnector
 import play.api.Logger
 import play.api.mvc._
+import uk.gov.hmrc.auth.core.AuthorisedFunctions
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TaxEnrolmentController extends BaseController {
+class TaxEnrolmentController extends BaseController with AuthorisedFunctions {
+
+  val authConnector = AuthConnector
 
   implicit val hc:HeaderCarrier = new HeaderCarrier
-  val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
+  val taxconnector: TaxEnrolmentConnector = TaxEnrolmentConnector
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
-    connector.enrolmentStatus(groupId)(hc).map {
+    taxconnector.enrolmentStatus(groupId)(hc).map {
       response =>
         Logger.info(s"The connector has returned ${response.status} for $groupId")
         Results.Status(response.status)(response.body)
