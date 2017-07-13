@@ -17,11 +17,11 @@
 package controllers
 
 
-import config.AuthConnector
+import config.LisaAuthConnector
 import connectors.TaxEnrolmentConnector
 import play.api.Logger
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AuthorisedFunctions
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxEnrolmentController extends BaseController with AuthorisedFunctions {
 
-  val authConnector = AuthConnector
+  val authConnector:AuthConnector = LisaAuthConnector
 
   implicit val hc:HeaderCarrier = new HeaderCarrier
   val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
