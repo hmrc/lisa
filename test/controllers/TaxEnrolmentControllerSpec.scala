@@ -26,6 +26,7 @@ import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsJson
 import play.api.test.Helpers._
 import play.api.test._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 import scala.concurrent.Future
@@ -69,6 +70,7 @@ class TaxEnrolmentControllerSpec extends PlaySpec
   }
 
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
+  val authconnecter: AuthConnector = mock[AuthConnector]
   val SUT = new TaxEnrolmentController {
     override val connector: TaxEnrolmentConnector = mockConnector
   }

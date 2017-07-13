@@ -32,10 +32,10 @@ class TaxEnrolmentController extends BaseController with AuthorisedFunctions {
   val authConnector = AuthConnector
 
   implicit val hc:HeaderCarrier = new HeaderCarrier
-  val taxconnector: TaxEnrolmentConnector = TaxEnrolmentConnector
+  val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
-    taxconnector.enrolmentStatus(groupId)(hc).map {
+    connector.enrolmentStatus(groupId)(hc).map {
       response =>
         Logger.info(s"The connector has returned ${response.status} for $groupId")
         Results.Status(response.status)(response.body)
