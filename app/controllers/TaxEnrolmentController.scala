@@ -27,9 +27,7 @@ import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TaxEnrolmentController extends BaseController with AuthorisedFunctions {
-
-  val authConnector:AuthConnector = LisaAuthConnector
+class TaxEnrolmentController extends BaseController  {
 
   implicit val hc:HeaderCarrier = new HeaderCarrier
   val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
