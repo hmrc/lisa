@@ -31,6 +31,8 @@ import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
 
+import play.api.Play.current
+
 import scala.concurrent.Future
 
 
@@ -51,22 +53,8 @@ object MicroserviceLoggingFilter extends LoggingFilter with MicroserviceFilterSu
   override def controllerNeedsLogging(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsLogging
 }
 
-//object MicroserviceAuthFilter extends uk.gov.hmrc.auth.filter.AuthorisationFilter with MicroserviceFilterSupport {
-//    override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
-//      .map(_.underlying)
-//      .getOrElse(ConfigFactory.empty()))
-//
-//    override def connector: uk.gov.hmrc.auth.core.AuthConnector = LisaAuthConnector
-//
-//    override implicit def mat: Materializer = Play.materializer
-//
-//}
 
 object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFilterSupport with RunMode {
-
-  override def onStart(app: Application) {
-    super.onStart(app)
-  }
 
   override val auditConnector = MicroserviceAuditConnector
 
@@ -88,7 +76,7 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFil
 }
 
 object AuthorisationFilter {
-  def apply()(implicit app: Application) = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
+  def apply() = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
     override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
       .map(_.underlying)
       .getOrElse(ConfigFactory.empty()))
