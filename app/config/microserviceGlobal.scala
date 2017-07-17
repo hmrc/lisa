@@ -16,14 +16,15 @@
 
 package config
 
-import com.typesafe.config.Config
+import akka.stream.Materializer
+import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
+import play.api.Play.current
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{RequestHeader, Result, Results}
+import play.api.mvc.{EssentialFilter, RequestHeader, Result, Results}
 import play.api.{Application, Configuration, Play}
+import uk.gov.hmrc.auth.filter.FilterConfig
 import uk.gov.hmrc.play.audit.filters.AuditFilter
-import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
-import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
@@ -36,12 +37,10 @@ object ControllerConfiguration extends ControllerConfig {
   lazy val controllerConfigs = Play.current.configuration.underlying.as[Config]("controllers")
 }
 
-object AuthParamsControllerConfiguration extends AuthParamsControllerConfig {
-  lazy val controllerConfigs = ControllerConfiguration.controllerConfigs
-}
 
 object MicroserviceAuditFilter extends AuditFilter with AppName with MicroserviceFilterSupport {
   override val auditConnector = MicroserviceAuditConnector
+
   override def controllerNeedsAuditing(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsAuditing
 }
 
@@ -49,13 +48,9 @@ object MicroserviceLoggingFilter extends LoggingFilter with MicroserviceFilterSu
   override def controllerNeedsLogging(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsLogging
 }
 
-object MicroserviceAuthFilter extends AuthorisationFilter with MicroserviceFilterSupport {
-  override lazy val authParamsConfig = AuthParamsControllerConfiguration
-  override lazy val authConnector = MicroserviceAuthConnector
-  override def controllerNeedsAuth(controllerName: String): Boolean = ControllerConfiguration.paramsForController(controllerName).needsAuth
-}
 
-object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with MicroserviceFilterSupport {
+object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFilterSupport with RunMode {
+
   override val auditConnector = MicroserviceAuditConnector
 
   override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig(s"microservice.metrics")
@@ -64,12 +59,26 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
 
   override val microserviceAuditFilter = MicroserviceAuditFilter
 
-  override val authFilter = Some(MicroserviceAuthFilter)
+  override def authFilter: Option[EssentialFilter] = Some(AuthorisationFilter())
 
-  private val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
+  val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
+
 
   override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
     super.onError(request, ex)
     Future.successful(Results.InternalServerError(errorJson))
   }
 }
+
+object AuthorisationFilter {
+  def apply() = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
+    override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
+      .map(_.underlying)
+      .getOrElse(ConfigFactory.empty()))
+
+    override def connector: uk.gov.hmrc.auth.core.AuthConnector = LisaAuthConnector
+
+    override implicit def mat: Materializer = Play.materializer
+  }
+}
+
