@@ -19,19 +19,16 @@ package config
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
+import play.api.Play.current
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{EssentialFilter, RequestHeader, Result, Results}
-import play.api.{Application, Configuration, Logger, Play}
+import play.api.{Application, Configuration, Play}
 import uk.gov.hmrc.auth.filter.FilterConfig
 import uk.gov.hmrc.play.audit.filters.AuditFilter
-import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
-import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
-
-import play.api.Play.current
 
 import scala.concurrent.Future
 
@@ -40,12 +37,10 @@ object ControllerConfiguration extends ControllerConfig {
   lazy val controllerConfigs = Play.current.configuration.underlying.as[Config]("controllers")
 }
 
-object AuthParamsControllerConfiguration extends AuthParamsControllerConfig {
-  lazy val controllerConfigs = ControllerConfiguration.controllerConfigs
-}
 
 object MicroserviceAuditFilter extends AuditFilter with AppName with MicroserviceFilterSupport {
   override val auditConnector = MicroserviceAuditConnector
+
   override def controllerNeedsAuditing(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsAuditing
 }
 
@@ -64,9 +59,9 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFil
 
   override val microserviceAuditFilter = MicroserviceAuditFilter
 
-  override def authFilter:Option[EssentialFilter]  = Some(AuthorisationFilter())
+  override def authFilter: Option[EssentialFilter] = Some(AuthorisationFilter())
 
-   val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
+  val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
 
 
   override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
