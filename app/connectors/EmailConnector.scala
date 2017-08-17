@@ -16,7 +16,7 @@
 
 package connectors
 
-import audit.Auditable
+
 import config.{MicroserviceAuditConnector, WSHttp}
 import models.SendEmailRequest
 import play.api.Logger
