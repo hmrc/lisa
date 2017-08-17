@@ -16,10 +16,11 @@
 
 package controllers
 
-import connectors.{DesConnector, TaxEnrolmentConnector}
+import connectors.{DesConnector, EmailNotSent, EmailSent, TaxEnrolmentConnector}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
+import services.NotificationService
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -27,7 +28,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-class ROSMController extends BaseController {
+
+trait ROSMController extends BaseController with NotificationService {
 
   val connector: DesConnector = DesConnector
   val enrolmentConnector: TaxEnrolmentConnector = TaxEnrolmentConnector
@@ -55,10 +57,14 @@ class ROSMController extends BaseController {
         case ACCEPTED => {
           val success = Results.Status(response.status)(response.body)
           val safeId = (requestJson \ "safeId").as[String]
+          val emailAddress = (requestJson \ "applicantDetails" \ "contactDetails" \ "emailAddress").as[String]
           val subscriptionId = (response.json \ "subscriptionId").as[String]
 
           Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
-          submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
+          val submitResposne = submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
+
+         sendMail(subscriptionId, emailAddress)
+         submitResposne
         }
       }
     } recover {
