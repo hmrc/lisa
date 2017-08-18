@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.{DesConnector, EmailNotSent, EmailSent, TaxEnrolmentConnector}
+import connectors._
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
@@ -33,6 +33,7 @@ trait ROSMController extends BaseController with NotificationService {
 
   val connector: DesConnector = DesConnector
   val enrolmentConnector: TaxEnrolmentConnector = TaxEnrolmentConnector
+  override def emailConnector: EmailConnector = connectors.EmailConnector
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     performRegister(utr)(request)
@@ -61,10 +62,9 @@ trait ROSMController extends BaseController with NotificationService {
           val subscriptionId = (response.json \ "subscriptionId").as[String]
 
           Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
-          val submitResposne = submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
 
-         sendMail(subscriptionId, emailAddress)
-         submitResposne
+          sendMail(subscriptionId, emailAddress)
+          submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
         }
       }
     } recover {
@@ -88,3 +88,5 @@ trait ROSMController extends BaseController with NotificationService {
   }
 
 }
+
+object ROSMController extends ROSMController
