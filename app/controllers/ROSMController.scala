@@ -16,11 +16,11 @@
 
 package controllers
 
-import connectors._
+import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import services.NotificationService
+
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -29,11 +29,10 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 
-trait ROSMController extends BaseController with NotificationService {
+class ROSMController extends BaseController{
 
   val connector: DesConnector = DesConnector
   val enrolmentConnector: TaxEnrolmentConnector = TaxEnrolmentConnector
-  override def emailConnector: EmailConnector = connectors.EmailConnector
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     performRegister(utr)(request)
@@ -50,7 +49,6 @@ trait ROSMController extends BaseController with NotificationService {
 
   def submitSubscription(utr: String, lisaManagerRef:String): Action[AnyContent] = Action.async { implicit request =>
     val requestJson: JsValue = request.body.asJson.get
-
     connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
       Logger.info(s"submitSubscription : Response from Connector ${response.status} for $utr")
 
@@ -58,13 +56,12 @@ trait ROSMController extends BaseController with NotificationService {
         case ACCEPTED => {
           val success = Results.Status(response.status)(response.body)
           val safeId = (requestJson \ "safeId").as[String]
-          val emailAddress = (requestJson \ "applicantDetails" \ "contactDetails" \ "emailAddress").as[String]
           val subscriptionId = (response.json \ "subscriptionId").as[String]
 
           Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+        submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
 
-          sendMail(subscriptionId, emailAddress)
-          submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
+
         }
       }
     } recover {
@@ -88,5 +85,3 @@ trait ROSMController extends BaseController with NotificationService {
   }
 
 }
-
-object ROSMController extends ROSMController
