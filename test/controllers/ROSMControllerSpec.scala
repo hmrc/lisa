@@ -16,8 +16,7 @@
 
 package controllers
 
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_EXCLUSIONPeer
-import connectors.{DesConnector, EmailConnector, TaxEnrolmentConnector}
+import connectors.{DesConnector, TaxEnrolmentConnector}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
@@ -187,11 +186,10 @@ class ROSMControllerSpec extends PlaySpec
 
   private val mockDesConnector = mock[DesConnector]
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
-  private val mockEmailConnector = mock[EmailConnector]
+
 
   private val SUT = new ROSMController {
     override val connector: DesConnector = mockDesConnector
-    override val emailConnector: EmailConnector = mockEmailConnector
     override val enrolmentConnector: TaxEnrolmentConnector = mockEnrolmentConnector
   }
 
