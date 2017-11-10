@@ -28,10 +28,10 @@ import play.api.test._
 import org.mockito.Matchers._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsJson, Result}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse, Upstream4xxResponse }
 
 
 class ROSMControllerSpec extends PlaySpec

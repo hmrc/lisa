@@ -24,13 +24,12 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{EssentialFilter, RequestHeader, Result, Results}
 import play.api.{Application, Configuration, Play}
 import uk.gov.hmrc.auth.filter.FilterConfig
-import uk.gov.hmrc.play.audit.filters.AuditFilter
+import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
-import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
-import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
 
 import scala.concurrent.Future
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, LoggingFilter, MicroserviceFilterSupport}
 
 
 object ControllerConfiguration extends ControllerConfig {
@@ -70,7 +69,7 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFil
   }
 }
 
-object AuthorisationFilter {
+object AuthorisationFilter extends AuthorisationFilter with MicroserviceFilterSupport{
   def apply() = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
     override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
       .map(_.underlying)

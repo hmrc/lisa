@@ -20,11 +20,12 @@ import config.{AppContext, WSHttp}
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.Authorization
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 
 trait DesConnector extends ServicesConfig {
 
@@ -44,7 +45,7 @@ trait DesConnector extends ServicesConfig {
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
     Logger.info(s"DES Connector post subscription ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
+    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), MdcLoggingExecutionContext.fromLoggingDetails(hc)) map { response =>
       response
     } recover {
       // $COVERAGE-OFF$
@@ -58,7 +59,7 @@ trait DesConnector extends ServicesConfig {
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
     Logger.info(s"DES Connector post registerOnce ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc)) map { response =>
+    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), MdcLoggingExecutionContext.fromLoggingDetails(hc)) map { response =>
       response
     } recover {
       // $COVERAGE-OFF$

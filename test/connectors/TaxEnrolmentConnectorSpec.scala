@@ -23,10 +23,10 @@ import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{ACCEPTED, _}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPut, HttpResponse }
 
 class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPerTest{
 
