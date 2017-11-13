@@ -33,7 +33,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   "Get enrolment status" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
+        when(mockHttpGet.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -51,7 +51,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpGet.GET[HttpResponse](any())(any(), any()))
+        when(mockHttpGet.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -72,7 +72,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   "Subscribe" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any()))
+        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -90,7 +90,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any()))
+        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(

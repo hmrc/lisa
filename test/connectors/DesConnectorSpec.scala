@@ -35,7 +35,7 @@ class DesConnectorSpec extends PlaySpec
   "Subscription endpoint" should {
     "Return a status 202" when {
       "Valid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -52,7 +52,7 @@ class DesConnectorSpec extends PlaySpec
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -78,7 +78,7 @@ class DesConnectorSpec extends PlaySpec
   "Registration endpoint" should {
     "Return a status 200" when {
       "Valid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -122,7 +122,7 @@ class DesConnectorSpec extends PlaySpec
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(

@@ -24,15 +24,16 @@ import uk.gov.hmrc.play.http.ws._
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 
-object WSHttp extends HttpGet with WSGet with HttpPut with WSPut with HttpPost with WSPost with HttpDelete with WSDelete with HttpPatch with WSPatch with AppName {
+trait WSHttp extends HttpGet with WSGet with HttpPut with WSPut with HttpPost with WSPost with HttpDelete with WSDelete with HttpPatch with WSPatch with AppName {
   override val hooks: Seq[HttpHook] = NoneRequired
 }
 
+object WSHttp extends WSHttp
 object MicroserviceAuditConnector extends AuditConnector with RunMode {
   override lazy val auditingConfig = LoadAuditingConfig(s"auditing")
 }
 
-object LisaAuthConnector extends PlayAuthConnector with ServicesConfig {
+object LisaAuthConnector extends PlayAuthConnector with ServicesConfig with WSHttp {
   val serviceUrl = baseUrl("auth")
   lazy val http = WSHttp
 }

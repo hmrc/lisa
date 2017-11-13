@@ -24,12 +24,11 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{EssentialFilter, RequestHeader, Result, Results}
 import play.api.{Application, Configuration, Play}
 import uk.gov.hmrc.auth.filter.FilterConfig
-import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
-
+import uk.gov.hmrc.play.auth.controllers
 import scala.concurrent.Future
-import uk.gov.hmrc.play.microservice.filters.{AuditFilter, LoggingFilter, MicroserviceFilterSupport}
+import uk.gov.hmrc.play.microservice.filters.{ AuditFilter, LoggingFilter, MicroserviceFilterSupport }
 
 
 object ControllerConfiguration extends ControllerConfig {
@@ -58,7 +57,7 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFil
 
   override val microserviceAuditFilter = MicroserviceAuditFilter
 
-  override def authFilter: Option[EssentialFilter] = Some(AuthorisationFilter())
+  override def authFilter: Option[EssentialFilter] = None
 
   val errorJson: JsValue = Json.parse("{\"code\": \"INTERNAL_SERVER_ERROR\", \"reason\": \"Internal Server Error\"}")
 
@@ -69,15 +68,15 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with MicroserviceFil
   }
 }
 
-object AuthorisationFilter extends AuthorisationFilter with MicroserviceFilterSupport{
-  def apply() = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
-    override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
-      .map(_.underlying)
-      .getOrElse(ConfigFactory.empty()))
-
-    override def connector: uk.gov.hmrc.auth.core.AuthConnector = LisaAuthConnector
-
-    override implicit def mat: Materializer = Play.materializer
-  }
-}
+//object AuthorisationFilter {
+//  def apply() = new uk.gov.hmrc.auth.filter.AuthorisationFilter {
+//    override def config: FilterConfig = FilterConfig(Play.current.configuration.getConfig("controllers")
+//      .map(_.underlying)
+//      .getOrElse(ConfigFactory.empty()))
+//
+//    override def connector: uk.gov.hmrc.auth.core.AuthConnector = LisaAuthConnector
+//
+//    override implicit def mat: Materializer = Play.materializer
+//  }
+//}
 
