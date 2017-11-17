@@ -17,27 +17,35 @@
 package controllers
 
 
+import config.LisaAuthConnector
 import connectors.TaxEnrolmentConnector
 import play.api.Logger
 import play.api.mvc._
+import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.config.RunMode
 
-class TaxEnrolmentController extends BaseController {
+class TaxEnrolmentController extends BaseController with RunMode  with AuthorisedFunctions{
 
   implicit val hc:HeaderCarrier = new HeaderCarrier
   val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
+  val authConnector: LisaAuthConnector = LisaAuthConnector
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
-    connector.enrolmentStatus(groupId)(hc).map {
-      response =>
-        Logger.info(s"The connector has returned ${response.status} for $groupId")
-        Results.Status(response.status)(response.body)
+    authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
+      connector.enrolmentStatus(groupId)(hc).map {
+        response =>
+          Logger.info(s"The connector has returned ${response.status} for $groupId")
+          Results.Status(response.status)(response.body)
+      } recover {
+        case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+      }
     } recover {
-      case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+      case _ => Unauthorized
     }
   }
-
 }

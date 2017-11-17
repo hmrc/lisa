@@ -16,26 +16,34 @@
 
 package controllers
 
+import config.LisaAuthConnector
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-
+import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.config.RunMode
 
 
-class ROSMController extends BaseController{
+class ROSMController extends BaseController with RunMode with AuthorisedFunctions {
 
   val connector: DesConnector = DesConnector
   val enrolmentConnector: TaxEnrolmentConnector = TaxEnrolmentConnector
+  val authConnector: LisaAuthConnector = LisaAuthConnector
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
-    performRegister(utr)(request)
+    authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
+      performRegister(utr)(request)
+    } recover {
+      case _ => Unauthorized
+    }
   }
 
   private def performRegister(utr: String)(implicit request:Request[AnyContent]): Future[Result] = {
@@ -48,27 +56,29 @@ class ROSMController extends BaseController{
   }
 
   def submitSubscription(utr: String, lisaManagerRef:String): Action[AnyContent] = Action.async { implicit request =>
-    val requestJson: JsValue = request.body.asJson.get
-    connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
-      Logger.info(s"submitSubscription : Response from Connector ${response.status} for $utr")
+    authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
+      val requestJson: JsValue = request.body.asJson.get
+      connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
+        Logger.info(s"submitSubscription : Response from Connector ${response.status} for $utr")
 
-      response.status match {
-        case ACCEPTED => {
-          val success = Results.Status(response.status)(response.body)
-          val safeId = (requestJson \ "safeId").as[String]
-          val subscriptionId = (response.json \ "subscriptionId").as[String]
+        response.status match {
+          case ACCEPTED => {
+            val success = Results.Status(response.status)(response.body)
+            val safeId = (requestJson \ "safeId").as[String]
+            val subscriptionId = (response.json \ "subscriptionId").as[String]
 
-          Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
-        submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
-
-
+            Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+            submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
+          }
+        }
+      } recover {
+        case NonFatal(ex: Throwable) => {
+          Logger.info(s"submitSubscription: Failed - ${ex.getMessage}")
+          InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
         }
       }
     } recover {
-      case NonFatal(ex:Throwable) => {
-        Logger.info(s"submitSubscription: Failed - ${ex.getMessage}")
-        InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
-      }
+      case _ => Unauthorized
     }
   }
 

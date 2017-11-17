@@ -14,7 +14,6 @@ object MicroServiceBuild extends Build with MicroService {
   val compile = Seq(
     ws,
     "uk.gov.hmrc" %% "microservice-bootstrap" % "6.13.0",
-//    "uk.gov.hmrc" %% "play-auth" % "2.5.0",
     "uk.gov.hmrc" %% "auth-client" % "2.3.0",
     "uk.gov.hmrc" %% "domain" % "5.0.0"
   )
@@ -25,7 +24,6 @@ object MicroServiceBuild extends Build with MicroService {
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
     "org.mockito" % "mockito-core" % "1.9.0" % scope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1"  % scope
+    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0"  % scope
   )
-
 }
