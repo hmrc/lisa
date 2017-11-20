@@ -40,7 +40,7 @@ class TaxEnrolmentControllerSpec extends PlaySpec
 
   override def beforeEach(): Unit = {
     reset(mockConnector)
-    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful())
+    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
   }
 
