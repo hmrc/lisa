@@ -29,9 +29,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.config.RunMode
 
-class TaxEnrolmentController extends BaseController with RunMode  with AuthorisedFunctions{
+class TaxEnrolmentController extends BaseController with RunMode with AuthorisedFunctions {
 
-  implicit val hc:HeaderCarrier = new HeaderCarrier
   val connector: TaxEnrolmentConnector = TaxEnrolmentConnector
   val authConnector: LisaAuthConnector = LisaAuthConnector
 
