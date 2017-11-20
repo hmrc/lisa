@@ -45,7 +45,7 @@ class ROSMControllerSpec extends PlaySpec
 
   override def beforeEach(): Unit = {
     reset(mockDesConnector)
-    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful())
+    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
   }
 
   val regPayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString
