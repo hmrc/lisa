@@ -16,32 +16,36 @@
 
 package controllers
 
+import config.LisaAuthConnector
 import connectors.{DesConnector, TaxEnrolmentConnector}
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.mockito.Mockito._
 
 import scala.concurrent.Future
 import play.api.test.Helpers._
 import play.api.test._
 import org.mockito.Matchers._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsJson, Result}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
+import uk.gov.hmrc.auth.core.BearerTokenExpired
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 
 class ROSMControllerSpec extends PlaySpec
   with MockitoSugar
-  with OneAppPerSuite with BeforeAndAfterEach {
+  with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   implicit val hc:HeaderCarrier = HeaderCarrier()
 
   override def beforeEach(): Unit = {
     reset(mockDesConnector)
+    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful())
   }
 
   val regPayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString
@@ -52,6 +56,7 @@ class ROSMControllerSpec extends PlaySpec
 
     "return a 200 ok response" when {
       "everything is valid and no errors are thrown" in {
+
         when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(Json.parse("{}")))))
 
         doRegister() { res =>
@@ -82,12 +87,24 @@ class ROSMControllerSpec extends PlaySpec
       }
     }
 
+    "return unauthorised" when {
+      "the auth connector does not return successfully" in {
+        when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed(BearerTokenExpired("Unauthorised")))
+
+        doRegister() { res =>
+          status(res) mustBe UNAUTHORIZED
+        }
+      }
+    }
+
   }
 
   "Subscribe endpoint" should {
 
     "return a 200 ok response with the subscriptionId" when {
       "everything is valid and no errors are thrown" in {
+
+
         when(mockEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
@@ -170,6 +187,16 @@ class ROSMControllerSpec extends PlaySpec
 
     }
 
+    "return unauthorised" when {
+      "the auth connector does not return successfully" in {
+        when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed(BearerTokenExpired("Unauthorised")))
+
+        doSubscribe() { res =>
+          status(res) mustBe UNAUTHORIZED
+        }
+      }
+    }
+
   }
 
   def doRegister()(callback: (Future[Result]) => Unit) {
@@ -186,11 +213,12 @@ class ROSMControllerSpec extends PlaySpec
 
   private val mockDesConnector = mock[DesConnector]
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
+  private val mockAuthCon = mock[LisaAuthConnector]
 
-
-  private val SUT = new ROSMController {
+  object SUT extends ROSMController {
     override val connector: DesConnector = mockDesConnector
     override val enrolmentConnector: TaxEnrolmentConnector = mockEnrolmentConnector
-  }
+    override val authConnector : LisaAuthConnector = mockAuthCon
 
+  }
 }

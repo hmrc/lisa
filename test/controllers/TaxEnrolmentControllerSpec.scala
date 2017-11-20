@@ -16,19 +16,20 @@
 
 package controllers
 
+import config.LisaAuthConnector
 import connectors.TaxEnrolmentConnector
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.Json
-import play.api.mvc.AnyContentAsJson
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
+import uk.gov.hmrc.auth.core.BearerTokenExpired
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 
 class TaxEnrolmentControllerSpec extends PlaySpec
@@ -39,6 +40,8 @@ class TaxEnrolmentControllerSpec extends PlaySpec
 
   override def beforeEach(): Unit = {
     reset(mockConnector)
+    when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful())
+
   }
 
   "Get Enrolments for Group ID" should {
@@ -62,6 +65,16 @@ class TaxEnrolmentControllerSpec extends PlaySpec
         contentAsJson(res) mustBe Json.parse("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     }
+    "return unauthorised" when {
+      "the auth connector doesnt return successfully" in {
+        when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed(BearerTokenExpired("unauthorised")))
+
+        val res = doGetSubscriptionsForGroupId()
+
+        status(res) mustBe UNAUTHORIZED
+      }
+    }
+
   }
 
   private def doGetSubscriptionsForGroupId() = {
@@ -69,7 +82,10 @@ class TaxEnrolmentControllerSpec extends PlaySpec
   }
 
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
-  val SUT = new TaxEnrolmentController {
+  val mockAuthCon :LisaAuthConnector = mock[LisaAuthConnector]
+
+  object SUT extends TaxEnrolmentController {
     override val connector: TaxEnrolmentConnector = mockConnector
+    override val authConnector: LisaAuthConnector = mockAuthCon
   }
 }
