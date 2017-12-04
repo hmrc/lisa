@@ -16,13 +16,19 @@
 
 package config
 
-import play.api.Play._
+import javax.inject.Inject
+
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.ServicesConfig
 
-object AppContext extends ServicesConfig {
-  lazy val appName = current.configuration.getString("appName").getOrElse(throw new RuntimeException("appName is not configured"))
-  lazy val appUrl = current.configuration.getString("appUrl").getOrElse(throw new RuntimeException("appUrl is not configured"))
-  lazy val baseUrl = current.configuration.getString(s"$env.baseUrl").getOrElse(throw new RuntimeException(s"Missing Key $env.baseUrl"))
-  lazy val desAuthToken = current.configuration.getString("desauthtoken").getOrElse(throw new RuntimeException(s"Missing Key $env.desauthtoken"))
-  lazy val desUrlHeaderEnv: String =  current.configuration.getString("environment").getOrElse(throw new RuntimeException(s"Missing Key $env.environment"))
+class AppContext @Inject() (override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
+
+  override protected def mode = environment.mode
+
+  lazy val appName = getString("appName")
+  lazy val appUrl = getString("appUrl")
+  lazy val baseUrl = getString(s"$env.baseUrl")
+  lazy val desAuthToken = getString("desauthtoken")
+  lazy val desUrlHeaderEnv: String =  getString("environment")
+
 }

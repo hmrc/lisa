@@ -16,27 +16,24 @@
 
 package controllers
 
-import config.LisaAuthConnector
+import javax.inject.Inject
+
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.config.RunMode
 
-
-class ROSMController extends BaseController with RunMode with AuthorisedFunctions {
-
-  val connector: DesConnector = DesConnector
-  val enrolmentConnector: TaxEnrolmentConnector = TaxEnrolmentConnector
-  val authConnector: LisaAuthConnector = LisaAuthConnector
+class ROSMController @Inject() (val connector: DesConnector,
+                                val enrolmentConnector: TaxEnrolmentConnector,
+                                val authConnector: AuthConnector) extends BaseController with AuthorisedFunctions {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
