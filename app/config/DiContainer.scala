@@ -22,9 +22,8 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class DiContainer extends AbstractModule {
   override def configure(): Unit = {
-    bind(classOf[HttpClient]).to(classOf[WSHttp])
-    bind(classOf[HttpGet]).to(classOf[WSHttp])
-    bind(classOf[HttpPost]).to(classOf[WSHttp])
-    bind(classOf[HttpPut]).to(classOf[WSHttp])
+    bind(classOf[HttpGet]).to(classOf[HttpClient])
+    bind(classOf[HttpPost]).to(classOf[HttpClient])
+    bind(classOf[HttpPut]).to(classOf[HttpClient])
   }
 }

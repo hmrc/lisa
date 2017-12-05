@@ -16,7 +16,7 @@
 
 package connectors
 
-import config.{ConnectorConfig, WSHttp}
+import config.ConnectorConfig
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar

@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.{ConnectorConfig, WSHttp}
+import config.ConnectorConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
