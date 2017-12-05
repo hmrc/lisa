@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.{ConnectorConfig, WSHttp}
+import config.ConnectorConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.logging.Authorization
@@ -28,15 +28,11 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (config: ConnectorConfig, httpPost: HttpPost) {
+class DesConnector @Inject() (config: ConnectorConfig, httpPost: HttpPost) extends RawResponseReads {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
   lazy val registrationUrl = s"$desUrl/registration/organisation"
-
-  val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse) = response
-  }
 
   private def updateHeaderCarrier(headerCarrier: HeaderCarrier) =
     headerCarrier.copy(extraHeaders = Seq("Environment" -> config.desUrlHeaderEnv),
