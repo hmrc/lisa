@@ -16,6 +16,7 @@
 
 package connectors
 
+import config.AppContext
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -26,7 +27,7 @@ import play.api.test.Helpers._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.io.Source
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpPost, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpPost, HttpResponse}
 
 class DesConnectorSpec extends PlaySpec
   with MockitoSugar
@@ -175,13 +176,12 @@ class DesConnectorSpec extends PlaySpec
   }
 
 
+  val mockContext = mock[AppContext]
   val mockHttpPost = mock[HttpPost]
 
   implicit val hc = HeaderCarrier()
 
-  object SUT extends DesConnector {
-    override val httpPost = mockHttpPost
-  }
+  val SUT = new DesConnector(mockContext, mockHttpPost)
 
 
 }

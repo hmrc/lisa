@@ -28,9 +28,8 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (val appContext: AppContext) {
+class DesConnector @Inject() (val appContext: AppContext, val httpPost: HttpPost) {
 
-  val httpPost:HttpPost = WSHttp
   lazy val desUrl = appContext.baseUrl("des")
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
   lazy val registrationUrl = s"$desUrl/registration/organisation"

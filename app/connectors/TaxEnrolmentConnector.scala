@@ -26,10 +26,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-class TaxEnrolmentConnector @Inject() (val appContext: AppContext) {
-
-  val httpGet: HttpGet = WSHttp
-  val httpPut: HttpPut = WSHttp
+class TaxEnrolmentConnector @Inject() (val appContext: AppContext, val httpGet: HttpGet, val httpPut: HttpPut) {
 
   lazy val taxEnrolmentServiceUrl: String = appContext.baseUrl("tax-enrolments") + "/tax-enrolments"
 

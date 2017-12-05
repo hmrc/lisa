@@ -16,26 +16,46 @@
 
 package config
 
+import javax.inject.Inject
+
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.config.{AppName, RunMode, ServicesConfig}
 import uk.gov.hmrc.play.http.ws._
 import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
+import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
 
-trait WSHttp extends HttpGet with WSGet with HttpPut with WSPut with HttpPost with WSPost with HttpDelete with WSDelete with HttpPatch with WSPatch with AppName {
+class WSHttp @Inject()(override val appNameConfiguration: Configuration)
+  extends HttpGet
+  with WSGet
+  with HttpPut
+  with WSPut
+  with HttpPost
+  with WSPost
+  with HttpDelete
+  with WSDelete
+  with HttpPatch
+  with WSPatch
+  with AppName {
+
   override val hooks: Seq[HttpHook] = NoneRequired
 }
 
-object WSHttp extends WSHttp
-object MicroserviceAuditConnector extends AuditConnector with RunMode {
-  override lazy val auditingConfig = LoadAuditingConfig(s"auditing")
+class MicroserviceAuditConnector @Inject()(override val runModeConfiguration: Configuration, environment: Environment)
+  extends AuditConnector
+  with RunMode {
+
+  override protected def mode = environment.mode
+  override lazy val auditingConfig = LoadAuditingConfig(runModeConfiguration, mode, s"auditing")
 }
 
-trait LisaAuthConnector extends PlayAuthConnector with ServicesConfig {
+class LisaAuthConnector @Inject()(override val runModeConfiguration: Configuration, environment: Environment, val http: WSHttp)
+  extends PlayAuthConnector
+  with ServicesConfig {
+
+  override protected def mode = environment.mode
+
   val serviceUrl = baseUrl("auth")
-  lazy val http = WSHttp
 }
-
-object LisaAuthConnector extends LisaAuthConnector

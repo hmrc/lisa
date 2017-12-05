@@ -16,6 +16,7 @@
 
 package connectors
 
+import config.AppContext
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -26,7 +27,7 @@ import play.api.test.Helpers.{ACCEPTED, _}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPut, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
 
 class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPerTest{
 
@@ -120,14 +121,13 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     callback(response)
   }
 
+  val mockContext: AppContext = mock[AppContext]
   val mockHttpGet: HttpGet = mock[HttpGet]
   val mockHttpPut: HttpPut = mock[HttpPut]
 
+
   implicit val hc = HeaderCarrier()
 
-  object SUT extends TaxEnrolmentConnector {
-    override val httpGet: HttpGet = mockHttpGet
-    override val httpPut: HttpPut = mockHttpPut
-  }
+  val SUT = new TaxEnrolmentConnector(mockContext, mockHttpGet, mockHttpPut)
 
 }
