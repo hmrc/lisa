@@ -16,7 +16,7 @@
 
 package connectors
 
-import config.AppContext
+import config.ConnectorConfig
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -121,13 +121,13 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     callback(response)
   }
 
-  val mockContext: AppContext = mock[AppContext]
+  val mockConfig: ConnectorConfig = mock[ConnectorConfig]
   val mockHttpGet: HttpGet = mock[HttpGet]
   val mockHttpPut: HttpPut = mock[HttpPut]
 
 
   implicit val hc = HeaderCarrier()
 
-  val SUT = new TaxEnrolmentConnector(mockContext, mockHttpGet, mockHttpPut)
+  val SUT = new TaxEnrolmentConnector(mockConfig, mockHttpGet, mockHttpPut)
 
 }

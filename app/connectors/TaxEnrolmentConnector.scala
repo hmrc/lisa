@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.{AppContext, WSHttp}
+import config.ConnectorConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
@@ -26,18 +26,18 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-class TaxEnrolmentConnector @Inject() (val appContext: AppContext, val httpGet: HttpGet, val httpPut: HttpPut) {
+class TaxEnrolmentConnector @Inject() (val config: ConnectorConfig, val httpGet: HttpGet, val httpPut: HttpPut) {
 
-  lazy val taxEnrolmentServiceUrl: String = appContext.baseUrl("tax-enrolments") + "/tax-enrolments"
+  lazy val taxEnrolmentUrl = config.taxEnrolmentUrl
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$taxEnrolmentServiceUrl/groups/$groupId/subscriptions"
+    val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
     Logger.info(s"Tax Enrolment connector get subscriptions $uri")
     httpGet.GET(uri)
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val uri = s"$taxEnrolmentServiceUrl/subscriptions/$subscriptionId/subscriber"
+    val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
     Logger.info(s"Tax Enrolment connector put subscribe $uri")
     httpPut.PUT(uri, body)
   }

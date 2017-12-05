@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.{AppContext, WSHttp}
+import config.ConnectorConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.logging.Authorization
@@ -28,9 +28,9 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (val appContext: AppContext, val httpPost: HttpPost) {
+class DesConnector @Inject() (val config: ConnectorConfig, val httpPost: HttpPost) {
 
-  lazy val desUrl = appContext.baseUrl("des")
+  lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
   lazy val registrationUrl = s"$desUrl/registration/organisation"
 
@@ -39,8 +39,8 @@ class DesConnector @Inject() (val appContext: AppContext, val httpPost: HttpPost
   }
 
   private def updateHeaderCarrier(headerCarrier: HeaderCarrier) =
-    headerCarrier.copy(extraHeaders = Seq(("Environment" -> appContext.desUrlHeaderEnv)),
-      authorization = Some(Authorization(s"Bearer ${appContext.desAuthToken}")))
+    headerCarrier.copy(extraHeaders = Seq("Environment" -> config.desUrlHeaderEnv),
+      authorization = Some(Authorization(s"Bearer ${config.desAuthToken}")))
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"

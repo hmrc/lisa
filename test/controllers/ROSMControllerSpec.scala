@@ -16,7 +16,6 @@
 
 package controllers
 
-import config.LisaAuthConnector
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -30,7 +29,7 @@ import play.api.test._
 import org.mockito.Matchers._
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsJson, Result}
-import uk.gov.hmrc.auth.core.BearerTokenExpired
+import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
@@ -213,7 +212,7 @@ class ROSMControllerSpec extends PlaySpec
 
   private val mockDesConnector = mock[DesConnector]
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
-  private val mockAuthCon = mock[LisaAuthConnector]
+  private val mockAuthCon = mock[AuthConnector]
 
   val SUT = new ROSMController(mockDesConnector, mockEnrolmentConnector, mockAuthCon)
 
