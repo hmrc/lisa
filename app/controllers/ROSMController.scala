@@ -31,9 +31,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-class ROSMController @Inject() (val connector: DesConnector,
-                                val enrolmentConnector: TaxEnrolmentConnector,
-                                val authConnector: AuthConnector) extends BaseController with AuthorisedFunctions {
+class ROSMController @Inject() (override val authConnector: AuthConnector,
+                                connector: DesConnector,
+                                enrolmentConnector: TaxEnrolmentConnector) extends BaseController with AuthorisedFunctions {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){

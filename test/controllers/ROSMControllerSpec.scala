@@ -214,6 +214,6 @@ class ROSMControllerSpec extends PlaySpec
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
   private val mockAuthCon = mock[AuthConnector]
 
-  val SUT = new ROSMController(mockDesConnector, mockEnrolmentConnector, mockAuthCon)
+  val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector)
 
 }

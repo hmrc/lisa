@@ -82,6 +82,6 @@ class TaxEnrolmentControllerSpec extends PlaySpec
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
   val mockAuthCon: AuthConnector = mock[AuthConnector]
 
-  val SUT = new TaxEnrolmentController(mockConnector, mockAuthCon)
+  val SUT = new TaxEnrolmentController(mockAuthCon, mockConnector)
 
 }

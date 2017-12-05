@@ -27,8 +27,8 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TaxEnrolmentController @Inject() (val connector: TaxEnrolmentConnector,
-                                        val authConnector: AuthConnector) extends BaseController with AuthorisedFunctions {
+class TaxEnrolmentController @Inject() (override val authConnector: AuthConnector,
+                                        connector: TaxEnrolmentConnector) extends BaseController with AuthorisedFunctions {
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
