@@ -16,7 +16,6 @@
 
 package controllers
 
-import config.LisaAuthConnector
 import connectors.TaxEnrolmentConnector
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -26,7 +25,7 @@ import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.auth.core.BearerTokenExpired
+import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
@@ -81,10 +80,8 @@ class TaxEnrolmentControllerSpec extends PlaySpec
   }
 
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
-  val mockAuthCon :LisaAuthConnector = mock[LisaAuthConnector]
+  val mockAuthCon: AuthConnector = mock[AuthConnector]
 
-  object SUT extends TaxEnrolmentController {
-    override val connector: TaxEnrolmentConnector = mockConnector
-    override val authConnector: LisaAuthConnector = mockAuthCon
-  }
+  val SUT = new TaxEnrolmentController(mockAuthCon, mockConnector)
+
 }

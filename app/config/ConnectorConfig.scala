@@ -18,20 +18,17 @@ package config
 
 import javax.inject.Inject
 
-import play.api.Configuration
-import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.AppName
-import uk.gov.hmrc.play.http.ws._
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.config.ServicesConfig
 
-class WSHttp @Inject()(override val appNameConfiguration: Configuration)
-  extends HttpClient
-    with WSGet
-    with WSPut
-    with WSPost
-    with WSDelete
-    with WSPatch
-    with AppName {
+class ConnectorConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
 
-  override val hooks: Seq[HttpHook] = NoneRequired
+  override protected def mode = environment.mode
+
+  lazy val desUrl = baseUrl("des")
+  lazy val desAuthToken = getString("desauthtoken")
+  lazy val desUrlHeaderEnv = getString("environment")
+
+  lazy val taxEnrolmentUrl: String = baseUrl("tax-enrolments") + "/tax-enrolments"
+
 }

@@ -16,22 +16,15 @@
 
 package config
 
-import javax.inject.Inject
-
-import play.api.Configuration
-import uk.gov.hmrc.http.hooks.HttpHook
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.http.{HttpGet, HttpPost, HttpPut}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.AppName
-import uk.gov.hmrc.play.http.ws._
 
-class WSHttp @Inject()(override val appNameConfiguration: Configuration)
-  extends HttpClient
-    with WSGet
-    with WSPut
-    with WSPost
-    with WSDelete
-    with WSPatch
-    with AppName {
-
-  override val hooks: Seq[HttpHook] = NoneRequired
+class DiContainer extends AbstractModule {
+  override def configure(): Unit = {
+    bind(classOf[HttpClient]).to(classOf[WSHttp])
+    bind(classOf[HttpGet]).to(classOf[WSHttp])
+    bind(classOf[HttpPost]).to(classOf[WSHttp])
+    bind(classOf[HttpPut]).to(classOf[WSHttp])
+  }
 }
