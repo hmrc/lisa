@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package config
 
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.http.{HttpGet, HttpPost, HttpPut}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 class DiContainer extends AbstractModule {
   override def configure(): Unit = {
-    bind(classOf[HttpGet]).to(classOf[HttpClient])
-    bind(classOf[HttpPost]).to(classOf[HttpClient])
-    bind(classOf[HttpPut]).to(classOf[HttpClient])
+    bind(classOf[HttpGet]).to(classOf[DefaultHttpClient])
+    bind(classOf[HttpPost]).to(classOf[DefaultHttpClient])
+    bind(classOf[HttpPut]).to(classOf[DefaultHttpClient])
   }
 }
