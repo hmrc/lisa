@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,17 +46,21 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
   private def performRegister(utr: String)(implicit request:Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map { response =>
       Logger.info(s"The connector has returned ${response.status} for $utr")
+
       Results.Status(response.status)(response.body)
+    } recover {
+      case NonFatal(ex: Throwable) => {
+        Logger.warn(s"performRegister: Failed - ${ex.getMessage}")
+        InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+      }
     }
-  } recover {
-    case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
   }
 
   def submitSubscription(utr: String, lisaManagerRef:String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       val requestJson: JsValue = request.body.asJson.get
       connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
-        Logger.info(s"submitSubscription : Response from Connector ${response.status} for $utr")
+        Logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr")
 
         response.status match {
           case ACCEPTED => {
@@ -64,13 +68,14 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
             val safeId = (requestJson \ "safeId").as[String]
             val subscriptionId = (response.json \ "subscriptionId").as[String]
 
-            Logger.info(s"submitSubscription : calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+            Logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
           }
+          case _ => throw new RuntimeException(s"ROSM subscription failed. Returned a response status of ${response.status} for zref $lisaManagerRef")
         }
       } recover {
         case NonFatal(ex: Throwable) => {
-          Logger.info(s"submitSubscription: Failed - ${ex.getMessage}")
+          Logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
         }
       }
@@ -83,10 +88,11 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
     val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> "http://", "etmpId" -> safeId)
 
     enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
-      Logger.info(s"submitSubscription : Tax Enrolments : Response from Connector ${enrolRes.status} for $subscriptionId")
+      Logger.info(s"submitSubscription: Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
 
       enrolRes.status match {
         case NO_CONTENT => success
+        case _ => throw new RuntimeException(s"Tax Enrolment subscription failed. Returned a response status of ${enrolRes.status} for subscriptionId $subscriptionId and safeId $safeId")
       }
     }
   }

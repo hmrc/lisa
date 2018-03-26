@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ class ROSMControllerSpec extends PlaySpec
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -150,7 +150,7 @@ class ROSMControllerSpec extends PlaySpec
           thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -160,10 +160,10 @@ class ROSMControllerSpec extends PlaySpec
 
       "the call to tax enrolments returns an unexpected status code" in {
         when(mockEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, responseString = Some("A 204 (No Content) the only valid response"))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -176,7 +176,7 @@ class ROSMControllerSpec extends PlaySpec
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{}""")))))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
