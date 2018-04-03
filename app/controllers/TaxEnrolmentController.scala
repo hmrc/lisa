@@ -17,7 +17,6 @@
 package controllers
 
 import javax.inject.Inject
-
 import connectors.TaxEnrolmentConnector
 import play.api.Logger
 import play.api.mvc._
@@ -26,6 +25,7 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, Autho
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class TaxEnrolmentController @Inject() (override val authConnector: AuthConnector,
                                         connector: TaxEnrolmentConnector) extends BaseController with AuthorisedFunctions {
@@ -43,4 +43,5 @@ class TaxEnrolmentController @Inject() (override val authConnector: AuthConnecto
       case _ => Unauthorized
     }
   }
+
 }

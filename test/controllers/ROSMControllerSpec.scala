@@ -16,6 +16,7 @@
 
 package controllers
 
+import config.AppConfig
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -213,7 +214,8 @@ class ROSMControllerSpec extends PlaySpec
   private val mockDesConnector = mock[DesConnector]
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
   private val mockAuthCon = mock[AuthConnector]
+  private val mockAppConfig = mock[AppConfig]
 
-  val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector)
+  val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector, mockAppConfig)
 
 }

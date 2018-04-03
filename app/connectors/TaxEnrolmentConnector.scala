@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.ConnectorConfig
+import config.AppConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-class TaxEnrolmentConnector @Inject() (config: ConnectorConfig, httpGet: HttpGet, httpPut: HttpPut) {
+class TaxEnrolmentConnector @Inject() (config: AppConfig, httpGet: HttpGet, httpPut: HttpPut) {
 
   lazy val taxEnrolmentUrl = config.taxEnrolmentUrl
 

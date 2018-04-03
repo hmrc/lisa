@@ -21,7 +21,7 @@ import javax.inject.Inject
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.ServicesConfig
 
-class ConnectorConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
+class AppConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
 
   override protected def mode = environment.mode
 
@@ -30,5 +30,6 @@ class ConnectorConfig @Inject()(override val runModeConfiguration: Configuration
   lazy val desUrlHeaderEnv = getString("environment")
 
   lazy val taxEnrolmentUrl: String = baseUrl("tax-enrolments") + "/tax-enrolments"
+  lazy val rosmCallbackUrl: String = getString("rosmCallbackUrl")
 
 }

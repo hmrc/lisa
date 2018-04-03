@@ -16,7 +16,7 @@
 
 package connectors
 
-import config.ConnectorConfig
+import config.AppConfig
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -121,7 +121,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     callback(response)
   }
 
-  val mockConfig: ConnectorConfig = mock[ConnectorConfig]
+  val mockConfig: AppConfig = mock[AppConfig]
   val mockHttpGet: HttpGet = mock[HttpGet]
   val mockHttpPut: HttpPut = mock[HttpPut]
 
