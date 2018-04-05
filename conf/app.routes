@@ -3,3 +3,7 @@
 GET     /tax-enrolments/groups/:groupId/subscriptions               @controllers.TaxEnrolmentController.getSubscriptionsForGroupId(groupId: String)
 POST    /:utr/register                                              @controllers.ROSMController.register(utr: String)
 POST    /:utr/subscribe/:lisaManagerRef                             @controllers.ROSMController.submitSubscription(utr: String, lisaManagerRef: String)
+
+GET     /rosm/callback                                              @controllers.ROSMController.subscriptionCallback()
+POST    /rosm/callback                                              @controllers.ROSMController.subscriptionCallback()
+PUT     /rosm/callback                                              @controllers.ROSMController.subscriptionCallback()

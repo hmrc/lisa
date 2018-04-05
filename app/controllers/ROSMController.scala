@@ -16,8 +16,8 @@
 
 package controllers
 
+import config.AppConfig
 import javax.inject.Inject
-
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
@@ -33,7 +33,8 @@ import scala.util.control.NonFatal
 
 class ROSMController @Inject() (override val authConnector: AuthConnector,
                                 connector: DesConnector,
-                                enrolmentConnector: TaxEnrolmentConnector) extends BaseController with AuthorisedFunctions {
+                                enrolmentConnector: TaxEnrolmentConnector,
+                                appConfig: AppConfig) extends BaseController with AuthorisedFunctions {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
@@ -85,7 +86,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
   }
 
   private def submitTaxEnrolmentSubscription(subscriptionId: String, safeId: String, success: Result)(implicit hc: HeaderCarrier): Future[Result] = {
-    val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> "http://", "etmpId" -> safeId)
+    val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> appConfig.rosmCallbackUrl, "etmpId" -> safeId)
 
     enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
       Logger.info(s"submitSubscription: Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
@@ -95,6 +96,17 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
         case _ => throw new RuntimeException(s"Tax Enrolment subscription failed. Returned a response status of ${enrolRes.status} for subscriptionId $subscriptionId and safeId $safeId")
       }
     }
+  }
+
+  def subscriptionCallback: Action[AnyContent] = Action.async { request =>
+    val logDetails =
+      s"method = ${request.method}" +
+      request.getQueryString("subscriptionId").map(id => s", subscriptionId = ${id}").getOrElse("") +
+      request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
+
+    Logger.warn(s"Received ROSM subscription callback: $logDetails")
+
+    Future.successful(NoContent)
   }
 
 }

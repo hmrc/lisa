@@ -16,7 +16,7 @@
 
 package connectors
 
-import config.ConnectorConfig
+import config.AppConfig
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -176,7 +176,7 @@ class DesConnectorSpec extends PlaySpec
   }
 
 
-  val mockConfig = mock[ConnectorConfig]
+  val mockConfig = mock[AppConfig]
   val mockHttpPost: HttpPost = mock[HttpPost]
 
   implicit val hc = HeaderCarrier()

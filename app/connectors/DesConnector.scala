@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.Inject
 
-import config.ConnectorConfig
+import config.AppConfig
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.logging.Authorization
@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (config: ConnectorConfig, httpPost: HttpPost) extends RawResponseReads {
+class DesConnector @Inject() (config: AppConfig, httpPost: HttpPost) extends RawResponseReads {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
