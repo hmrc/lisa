@@ -3,7 +3,6 @@ import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
-// $COVERAGE-OFF$
 trait MicroService {
 
   import uk.gov.hmrc._
@@ -65,4 +64,3 @@ private object TestPhases {
       test => new Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
     }
 }
-// $COVERAGE-ON$

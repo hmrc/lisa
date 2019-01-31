@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,52 +16,49 @@
 
 package connectors
 
-import javax.inject.Inject
-
 import config.AppConfig
+import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (config: AppConfig, httpPost: HttpPost) extends RawResponseReads {
+class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
   lazy val registrationUrl = s"$desUrl/registration/organisation"
 
-  private def updateHeaderCarrier(headerCarrier: HeaderCarrier) =
-    headerCarrier.copy(extraHeaders = Seq("Environment" -> config.desUrlHeaderEnv),
-      authorization = Some(Authorization(s"Bearer ${config.desAuthToken}")))
+  private def updateHeaderCarrier(headerCarrier: HeaderCarrier): HeaderCarrier = {
+    headerCarrier.copy(
+      extraHeaders = Seq("Environment" -> config.desUrlHeaderEnv),
+      authorization = Some(Authorization(s"Bearer ${config.desAuthToken}"))
+    )
+  }
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
     Logger.info(s"DES Connector post subscription ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), MdcLoggingExecutionContext.fromLoggingDetails(hc)) map { response =>
-      response
-    } recover {
-      // $COVERAGE-OFF$
-      case e: Exception => Logger.error(s"Error in Desconnector subscribe: ${e.getMessage}")
+    httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
+      case e: Exception => {
+        Logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
         throw e
-      // $COVERAGE-ON$
+      }
     }
   }
-
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
     Logger.info(s"DES Connector post registerOnce ${uri}")
-    httpPost.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), MdcLoggingExecutionContext.fromLoggingDetails(hc)) map { response =>
-      response
-    } recover {
-      // $COVERAGE-OFF$
-      case e: Exception => Logger.error(s"Error in Desconnector register : ${e.getMessage}")
+    httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
+      case e: Exception => {
+        Logger.error(s"Error in DesConnector register : ${e.getMessage}")
         throw e
-      // $COVERAGE-ON$
+      }
     }
   }
 
