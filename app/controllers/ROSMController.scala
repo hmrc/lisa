@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,10 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
 
       enrolRes.status match {
         case NO_CONTENT => success
-        case _ => throw new RuntimeException(s"Tax Enrolment subscription failed. Returned a response status of ${enrolRes.status} for subscriptionId $subscriptionId and safeId $safeId")
+        case _ => {
+          val msg = s"Tax Enrolment subscription failed. Returned a response status of ${enrolRes.status} for subscriptionId $subscriptionId and safeId $safeId"
+          throw new RuntimeException(msg)
+        }
       }
     }
   }

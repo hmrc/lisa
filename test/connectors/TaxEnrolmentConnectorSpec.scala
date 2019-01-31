@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,19 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContent
-import play.api.test.Helpers.{ACCEPTED, _}
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPut, HttpResponse}
 
 class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPerTest{
 
   "Get enrolment status" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpGet.GET[HttpResponse](any())(any(), any(), any()))
+        when(mockHttpClient.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -52,7 +53,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpGet.GET[HttpResponse](any())(any(), any(), any()))
+        when(mockHttpClient.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -73,7 +74,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   "Subscribe" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -91,7 +92,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpPut.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -122,12 +123,11 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   }
 
   val mockConfig: AppConfig = mock[AppConfig]
-  val mockHttpGet: HttpGet = mock[HttpGet]
-  val mockHttpPut: HttpPut = mock[HttpPut]
+  val mockHttpClient: HttpClient = mock[HttpClient]
 
 
   implicit val hc = HeaderCarrier()
 
-  val SUT = new TaxEnrolmentConnector(mockConfig, mockHttpGet, mockHttpPut)
+  val SUT = new TaxEnrolmentConnector(mockConfig, mockHttpClient)
 
 }

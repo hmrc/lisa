@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,12 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.io.Source
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost, HttpResponse}
 
 class DesConnectorSpec extends PlaySpec
   with MockitoSugar
@@ -36,7 +37,7 @@ class DesConnectorSpec extends PlaySpec
   "Subscription endpoint" should {
     "Return a status 202" when {
       "Valid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -53,7 +54,7 @@ class DesConnectorSpec extends PlaySpec
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -79,7 +80,7 @@ class DesConnectorSpec extends PlaySpec
   "Registration endpoint" should {
     "Return a status 200" when {
       "Valid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -123,7 +124,7 @@ class DesConnectorSpec extends PlaySpec
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpPost.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -177,11 +178,11 @@ class DesConnectorSpec extends PlaySpec
 
 
   val mockConfig = mock[AppConfig]
-  val mockHttpPost: HttpPost = mock[HttpPost]
+  val mockHttpClient: HttpClient = mock[HttpClient]
 
   implicit val hc = HeaderCarrier()
 
-  val SUT = new DesConnector(mockConfig, mockHttpPost)
+  val SUT = new DesConnector(mockConfig, mockHttpClient)
 
 
 }
