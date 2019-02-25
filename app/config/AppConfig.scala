@@ -23,8 +23,6 @@ import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 @Singleton
 class AppConfig @Inject()(configuration: Configuration, runMode: RunMode) extends ServicesConfig(configuration: Configuration, runMode: RunMode) {
 
-//  override protected def mode = environment.mode
-
   lazy val desUrl = baseUrl("des")
   lazy val desAuthToken = getString("desauthtoken")
   lazy val desUrlHeaderEnv = getString("environment")
