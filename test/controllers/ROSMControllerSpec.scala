@@ -29,7 +29,7 @@ import play.api.test.Helpers._
 import play.api.test._
 import org.mockito.Matchers._
 import play.api.libs.json.Json
-import play.api.mvc.{AnyContentAsJson, Result}
+import play.api.mvc.{AnyContentAsJson, ControllerComponents, Result}
 import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,8 +37,7 @@ import scala.io.Source
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 class ROSMControllerSpec extends PlaySpec
-  with MockitoSugar
-  with GuiceOneAppPerSuite with BeforeAndAfterEach {
+  with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach with Injecting {
 
   implicit val hc:HeaderCarrier = HeaderCarrier()
 
@@ -213,8 +212,9 @@ class ROSMControllerSpec extends PlaySpec
   private val mockDesConnector = mock[DesConnector]
   private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
   private val mockAuthCon = mock[AuthConnector]
+  private lazy val controllerComponents = inject[ControllerComponents]
   private val mockAppConfig = mock[AppConfig]
 
-  val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector, mockAppConfig)
+  lazy val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector, controllerComponents, mockAppConfig)
 
 }

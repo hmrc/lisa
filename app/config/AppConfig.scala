@@ -16,14 +16,12 @@
 
 package config
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
+import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.config.ServicesConfig
-
-class AppConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
-
-  override protected def mode = environment.mode
+@Singleton
+class AppConfig @Inject()(configuration: Configuration, runMode: RunMode) extends ServicesConfig(configuration: Configuration, runMode: RunMode) {
 
   lazy val desUrl = baseUrl("des")
   lazy val desAuthToken = getString("desauthtoken")

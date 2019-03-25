@@ -23,6 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.Json
+import play.api.mvc.ControllerComponents
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
@@ -31,8 +32,7 @@ import scala.concurrent.Future
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
 class TaxEnrolmentControllerSpec extends PlaySpec
-  with MockitoSugar
-  with OneAppPerSuite with BeforeAndAfterEach {
+  with MockitoSugar with OneAppPerSuite with BeforeAndAfterEach with Injecting {
 
   implicit val hc:HeaderCarrier = HeaderCarrier()
 
@@ -80,7 +80,8 @@ class TaxEnrolmentControllerSpec extends PlaySpec
 
   val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
   val mockAuthCon: AuthConnector = mock[AuthConnector]
+  private lazy val controllerComponents = inject[ControllerComponents]
 
-  val SUT = new TaxEnrolmentController(mockAuthCon, mockConnector)
+  lazy val SUT = new TaxEnrolmentController(mockAuthCon, mockConnector, controllerComponents)
 
 }

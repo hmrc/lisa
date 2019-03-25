@@ -22,12 +22,13 @@ import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxEnrolmentController @Inject() (override val authConnector: AuthConnector,
-                                        connector: TaxEnrolmentConnector) extends BaseController with AuthorisedFunctions {
+                                        connector: TaxEnrolmentConnector,
+                                        val cc: ControllerComponents) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions {
 
   def getSubscriptionsForGroupId(groupId: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {

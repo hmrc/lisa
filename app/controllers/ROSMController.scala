@@ -25,7 +25,7 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,7 +34,8 @@ import scala.util.control.NonFatal
 class ROSMController @Inject() (override val authConnector: AuthConnector,
                                 connector: DesConnector,
                                 enrolmentConnector: TaxEnrolmentConnector,
-                                appConfig: AppConfig) extends BaseController with AuthorisedFunctions {
+                                cc: ControllerComponents,
+                                appConfig: AppConfig) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
