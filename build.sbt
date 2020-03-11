@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,54 @@
  * limitations under the License.
  */
 
+import play.core.PlayVersion
 import scoverage.ScoverageKeys
-import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
+import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, integrationTestSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
-lazy val lisa = (project in file("."))
-  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
-  .settings(scoverageSettings: _*)
-  .settings(scalaSettings: _*)
-  .settings(publishingSettings: _*)
-  .settings(defaultSettings(): _*)
-  .settings(
-    name := "lisa",
-    majorVersion := 1,
-    PlayKeys.playDefaultPort := 8886,
-    libraryDependencies ++= AppDependencies(),
-    retrieveManaged := true,
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
-    fork in Test := true,
-    resolvers ++= Seq(
-      Resolver.bintrayRepo("hmrc", "releases"),
-      Resolver.jcenterRepo
-    ))
+name                      := "lisa"
+PlayKeys.playDefaultPort  := 8886
+majorVersion              := 1
+retrieveManaged           := true
 
-lazy val scoverageSettings = {
-  Seq(
-    ScoverageKeys.coverageExcludedPackages := "<empty>;testOnlyDoNotUseInAppConf.*;config.*;.metrics.*;prod.*;app.*;MicroService*;uk.gov.hmrc.BuildInfo",
-    ScoverageKeys.coverageMinimum := 70,
-    ScoverageKeys.coverageFailOnMinimum := false,
-    ScoverageKeys.coverageHighlighting := true,
-    parallelExecution in Test := false
-  )
-}
+lazy val lisa = (project in file("."))
+  .configs(IntegrationTest)
+
+scalaSettings
+publishingSettings
+defaultSettings()
+integrationTestSettings()
+
+scalaVersion := "2.12.10"
+
+val testScope = "test"
+
+libraryDependencies ++= Seq(
+  ws,
+  "uk.gov.hmrc"             %% "bootstrap-play-26"  % "1.5.0",
+  "uk.gov.hmrc"             %% "auth-client"        % "2.35.0-play-26",
+  "uk.gov.hmrc"             %% "domain"             % "5.6.0-play-26",
+  "org.scalatest"           %% "scalatest"          % "3.0.8"             % testScope,
+  "org.pegdown"             %  "pegdown"            % "1.6.0"             % testScope,
+  "org.mockito"             %  "mockito-core"       % "3.3.0"             % testScope,
+  "com.typesafe.play"       %% "play-test"          % PlayVersion.current % testScope,
+  "org.scalatestplus.play"  %% "scalatestplus-play" % "3.1.3"             % testScope
+)
+unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
+
+evictionWarningOptions in update        := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+
+fork in Test                            := true
+
+resolvers ++= Seq(
+  Resolver.bintrayRepo("hmrc", "releases"),
+  Resolver.jcenterRepo
+)
+
+enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
+
+ScoverageKeys.coverageExcludedPackages  := "<empty>;testOnlyDoNotUseInAppConf.*;config.*;.metrics.*;prod.*;app.*;MicroService*;uk.gov.hmrc.BuildInfo"
+ScoverageKeys.coverageMinimum           := 70
+ScoverageKeys.coverageFailOnMinimum     := false
+ScoverageKeys.coverageHighlighting      := true
+parallelExecution in Test               := false

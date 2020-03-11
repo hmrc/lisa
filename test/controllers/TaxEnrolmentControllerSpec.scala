@@ -16,35 +16,30 @@
 
 package controllers
 
-import connectors.TaxEnrolmentConnector
-import org.mockito.Matchers._
-import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import helpers.BaseTestSpec
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, when}
 import play.api.libs.json.Json
-import play.api.mvc.ControllerComponents
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
+import uk.gov.hmrc.auth.core.BearerTokenExpired
+import uk.gov.hmrc.http.{HttpResponse, Upstream4xxResponse}
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
-class TaxEnrolmentControllerSpec extends PlaySpec
-  with MockitoSugar with OneAppPerSuite with BeforeAndAfterEach with Injecting {
+class TaxEnrolmentControllerSpec extends BaseTestSpec {
 
-  implicit val hc:HeaderCarrier = HeaderCarrier()
+  lazy val taxEnrolmentController = new TaxEnrolmentController(mockAuthCon, mockTaxEnrolmentConnector, controllerComponents)
 
   override def beforeEach(): Unit = {
-    reset(mockConnector)
+    reset(mockTaxEnrolmentConnector)
     when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
   }
 
   "Get Enrolments for Group ID" should {
     "return the status and body as returned from the connector" when {
       "no errors occur" in {
-        when(mockConnector.enrolmentStatus(any())(any())).thenReturn(Future.successful(HttpResponse(OK, responseString = Some("test"))))
+        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.successful(HttpResponse(OK, responseString = Some("test"))))
 
         val res = doGetSubscriptionsForGroupId()
 
@@ -54,7 +49,7 @@ class TaxEnrolmentControllerSpec extends PlaySpec
     }
     "return appropriate 500 internal server error response" when {
       "any errors occur" in {
-        when(mockConnector.enrolmentStatus(any())(any())).thenReturn(Future.failed(Upstream4xxResponse("fail", BAD_REQUEST, BAD_REQUEST)))
+        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.failed(Upstream4xxResponse("fail", BAD_REQUEST, BAD_REQUEST)))
 
         val res = doGetSubscriptionsForGroupId()
 
@@ -75,13 +70,6 @@ class TaxEnrolmentControllerSpec extends PlaySpec
   }
 
   private def doGetSubscriptionsForGroupId() = {
-    SUT.getSubscriptionsForGroupId("1234567890").apply(FakeRequest(Helpers.GET, "/"))
+    taxEnrolmentController.getSubscriptionsForGroupId("1234567890").apply(FakeRequest(Helpers.GET, "/"))
   }
-
-  val mockConnector: TaxEnrolmentConnector = mock[TaxEnrolmentConnector]
-  val mockAuthCon: AuthConnector = mock[AuthConnector]
-  private lazy val controllerComponents = inject[ControllerComponents]
-
-  lazy val SUT = new TaxEnrolmentController(mockAuthCon, mockConnector, controllerComponents)
-
 }
