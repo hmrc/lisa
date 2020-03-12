@@ -16,39 +16,32 @@
 
 package controllers
 
-import config.AppConfig
-import connectors.{DesConnector, TaxEnrolmentConnector}
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import org.mockito.Mockito._
-
-import scala.concurrent.Future
-import play.api.test.Helpers._
-import play.api.test._
-import org.mockito.Matchers._
+import helpers.BaseTestSpec
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, when}
 import play.api.libs.json.Json
-import play.api.mvc.{AnyContentAsJson, ControllerComponents, Result}
-import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired}
+import play.api.mvc.{AnyContentAsJson, Result}
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.auth.core.BearerTokenExpired
+import uk.gov.hmrc.http.{HttpResponse, Upstream4xxResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.io.Source
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Upstream4xxResponse}
 
-class ROSMControllerSpec extends PlaySpec
-  with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach with Injecting {
+class ROSMControllerSpec extends BaseTestSpec {
 
-  implicit val hc:HeaderCarrier = HeaderCarrier()
+  lazy val rosmController = new ROSMController(mockAuthCon, mockDesConnector, mockTaxEnrolmentConnector, controllerComponents, mockAppConfig)
 
   override def beforeEach(): Unit = {
     reset(mockDesConnector)
     when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
   }
 
-  val regPayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString
-  val regErrorJson: String = Source.fromInputStream(getClass().getResourceAsStream("/json/utr_error.json")).mkString
-  val subscribePayload: String = Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString
+  val regPayload: String = Source.fromInputStream(getClass.getResourceAsStream("/json/registration_example.json")).mkString
+  val regErrorJson: String = Source.fromInputStream(getClass.getResourceAsStream("/json/utr_error.json")).mkString
+  val subscribePayload: String = Source.fromInputStream(getClass.getResourceAsStream("/json/subscription_example.json")).mkString
 
   "Register endpoint" should {
 
@@ -103,7 +96,7 @@ class ROSMControllerSpec extends PlaySpec
       "everything is valid and no errors are thrown" in {
 
 
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -119,7 +112,7 @@ class ROSMControllerSpec extends PlaySpec
     "return a 500 internal server error response" when {
 
       "the call to des fails" in {
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -132,7 +125,7 @@ class ROSMControllerSpec extends PlaySpec
       }
 
       "the call to des returns an unexpected status code" in {
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -145,7 +138,7 @@ class ROSMControllerSpec extends PlaySpec
       }
 
       "the call to tax enrolments fails" in {
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -158,7 +151,7 @@ class ROSMControllerSpec extends PlaySpec
       }
 
       "the call to tax enrolments returns an unexpected status code" in {
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -171,7 +164,7 @@ class ROSMControllerSpec extends PlaySpec
       }
 
       "the response from des does not contain a subscriptionId" in {
-        when(mockEnrolmentConnector.subscribe(any(), any())(any())).
+        when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
@@ -194,27 +187,28 @@ class ROSMControllerSpec extends PlaySpec
         }
       }
     }
+  }
 
+  "callback endpoint" should {
+    "return a no content if called" in {
+      status(
+        rosmController.subscriptionCallback().apply(
+          FakeRequest(Helpers.GET, "/rosm/callback?subscriptionId=123456")
+            .withBody(AnyContentAsJson(Json.obj("some" -> "body"))))
+      ) mustBe NO_CONTENT
+    }
   }
 
   def doRegister()(callback: (Future[Result]) => Unit) {
-    val res = await(SUT.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
+    val res = await(rosmController.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
 
     callback(Future(res))
   }
 
   def doSubscribe()(callback: (Future[Result]) => Unit) {
-    val res = await(SUT.submitSubscription("1234567890", "Z1234").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
+    val res = await(rosmController.submitSubscription("1234567890", "Z1234")
+      .apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
 
     callback(Future(res))
   }
-
-  private val mockDesConnector = mock[DesConnector]
-  private val mockEnrolmentConnector = mock[TaxEnrolmentConnector]
-  private val mockAuthCon = mock[AuthConnector]
-  private lazy val controllerComponents = inject[ControllerComponents]
-  private val mockAppConfig = mock[AppConfig]
-
-  lazy val SUT = new ROSMController(mockAuthCon, mockDesConnector, mockEnrolmentConnector, controllerComponents, mockAppConfig)
-
 }

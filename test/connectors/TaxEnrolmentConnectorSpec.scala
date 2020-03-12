@@ -16,21 +16,20 @@
 
 package connectors
 
-import config.AppConfig
-import org.mockito.Matchers.any
+import helpers.BaseTestSpec
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneAppPerTest, PlaySpec}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPerTest{
+class TaxEnrolmentConnectorSpec extends BaseTestSpec {
+
+  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClient)
 
   "Get enrolment status" should {
     "return a success verbatim" when {
@@ -74,7 +73,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
   "Subscribe" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -92,7 +91,7 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any())(any(), any(), any(), any()))
+        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -110,24 +109,15 @@ class TaxEnrolmentConnectorSpec extends PlaySpec with MockitoSugar with OneAppPe
     }
   }
 
-  private def doEnrolmentStatus(callback: HttpResponse => Unit) = {
-    val response = Await.result(SUT.enrolmentStatus("Z0192"), Duration.Inf)
+  private def doEnrolmentStatus(callback: HttpResponse => Unit): Unit = {
+    val response = Await.result(taxEnrolmentConnector.enrolmentStatus("Z0192"), Duration.Inf)
 
     callback(response)
   }
 
-  private def doSubscribe(callback: HttpResponse => Unit) = {
-    val response = Await.result(SUT.subscribe("1234567890", Json.parse("{}")), Duration.Inf)
+  private def doSubscribe(callback: HttpResponse => Unit): Unit = {
+    val response = Await.result(taxEnrolmentConnector.subscribe("1234567890", Json.parse("{}")), Duration.Inf)
 
     callback(response)
   }
-
-  val mockConfig: AppConfig = mock[AppConfig]
-  val mockHttpClient: HttpClient = mock[HttpClient]
-
-
-  implicit val hc = HeaderCarrier()
-
-  val SUT = new TaxEnrolmentConnector(mockConfig, mockHttpClient)
-
 }

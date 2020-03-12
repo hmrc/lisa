@@ -16,23 +16,20 @@
 
 package connectors
 
-import config.AppConfig
-import org.mockito.Matchers.any
+import helpers.BaseTestSpec
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HttpResponse, Upstream5xxResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.io.Source
 
-class DesConnectorSpec extends PlaySpec
-  with MockitoSugar
-  with OneAppPerSuite {
+class DesConnectorSpec extends BaseTestSpec {
+
+  val desConnector = new DesConnector(mockAppConfig, mockHttpClient)
 
   "Subscription endpoint" should {
     "Return a status 202" when {
@@ -74,6 +71,15 @@ class DesConnectorSpec extends PlaySpec
           response.status must be(SERVICE_UNAVAILABLE)
         }
       }
+    }
+  }
+
+  "Return an exception" when {
+    "an invalid status is returned" in {
+      when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+
+      intercept[Upstream5xxResponse](await(desConnector.subscribe("Z019281", Json.obj())))
     }
   }
 
@@ -145,44 +151,42 @@ class DesConnectorSpec extends PlaySpec
         }
       }
     }
+    "Return an exception" when {
+      "an error status is returned" in {
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+          .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+
+        intercept[Upstream5xxResponse](await(desConnector.register("Z019256", Json.obj())))
+      }
+    }
   }
 
-  private def doSubcribe(callback: HttpResponse => Unit) = {
+  private def doSubcribe(callback: HttpResponse => Unit): Unit = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString)
-    val response = Await.result(SUT.subscribe("Z019283", jsVal), Duration.Inf)
+    val response = Await.result(desConnector.subscribe("Z019283", jsVal), Duration.Inf)
 
     callback(response)
   }
 
 
-  private def doRegister(callback: HttpResponse => Unit) = {
+  private def doRegister(callback: HttpResponse => Unit): Unit = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString)
-    val response = Await.result(SUT.register("Z019283", jsVal), Duration.Inf)
+    val response = Await.result(desConnector.register("Z019283", jsVal), Duration.Inf)
 
     callback(response)
   }
 
-  private def doInvalidSubscribe(callback: HttpResponse => Unit) = {
+  private def doInvalidSubscribe(callback: HttpResponse => Unit): Unit = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString.replace("utr", "otr"))
-    val response = Await.result(SUT.subscribe("Z019283", jsVal), Duration.Inf)
+    val response = Await.result(desConnector.subscribe("Z019283", jsVal), Duration.Inf)
 
     callback(response)
   }
 
-  private def doInvalidRegister(callback: HttpResponse => Unit) = {
+  private def doInvalidRegister(callback: HttpResponse => Unit): Unit = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/registration_example.json")).mkString.replace("utr", "otr"))
-    val response = Await.result(SUT.register("Z019283", jsVal), Duration.Inf)
+    val response = Await.result(desConnector.register("Z019283", jsVal), Duration.Inf)
 
     callback(response)
   }
-
-
-  val mockConfig = mock[AppConfig]
-  val mockHttpClient: HttpClient = mock[HttpClient]
-
-  implicit val hc = HeaderCarrier()
-
-  val SUT = new DesConnector(mockConfig, mockHttpClient)
-
-
 }
