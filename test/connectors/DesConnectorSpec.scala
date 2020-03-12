@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{HttpResponse, Upstream5xxResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -71,6 +71,15 @@ class DesConnectorSpec extends BaseTestSpec {
           response.status must be(SERVICE_UNAVAILABLE)
         }
       }
+    }
+  }
+
+  "Return an exception" when {
+    "an invalid status is returned" in {
+      when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+
+      intercept[Upstream5xxResponse](await(desConnector.subscribe("Z019281", Json.obj())))
     }
   }
 
@@ -140,6 +149,14 @@ class DesConnectorSpec extends BaseTestSpec {
         doInvalidRegister { response =>
           response.status must be(SERVICE_UNAVAILABLE)
         }
+      }
+    }
+    "Return an exception" when {
+      "an error status is returned" in {
+        when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+          .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+
+        intercept[Upstream5xxResponse](await(desConnector.register("Z019256", Json.obj())))
       }
     }
   }

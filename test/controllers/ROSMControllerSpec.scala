@@ -187,7 +187,16 @@ class ROSMControllerSpec extends BaseTestSpec {
         }
       }
     }
+  }
 
+  "callback endpoint" should {
+    "return a no content if called" in {
+      status(
+        rosmController.subscriptionCallback().apply(
+          FakeRequest(Helpers.GET, "/rosm/callback?subscriptionId=123456")
+            .withBody(AnyContentAsJson(Json.obj("some" -> "body"))))
+      ) mustBe NO_CONTENT
+    }
   }
 
   def doRegister()(callback: (Future[Result]) => Unit) {

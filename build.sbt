@@ -61,7 +61,7 @@ resolvers ++= Seq(
 enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
 
 ScoverageKeys.coverageExcludedPackages  := "<empty>;testOnlyDoNotUseInAppConf.*;config.*;.metrics.*;prod.*;app.*;MicroService*;uk.gov.hmrc.BuildInfo"
-ScoverageKeys.coverageMinimum           := 70
+ScoverageKeys.coverageMinimum           := 100
 ScoverageKeys.coverageFailOnMinimum     := false
 ScoverageKeys.coverageHighlighting      := true
 parallelExecution in Test               := false
