@@ -6,7 +6,7 @@ Backend microservice for [lisa-frontend]("http://github.com/hmrc/lisa-frontend")
 
 ## Requirements
 
-This service is written in [Scala 2.11](http://www.scala-lang.org/) and [Play 2.6](http://playframework.com/), so needs at least a [JRE 1.8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) to run.
+This service is written in [Scala 2.12](http://www.scala-lang.org/) and [Play 2.7](http://playframework.com/), so needs at least a [JRE 1.8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) to run.
 
 ## Running Locally
 
