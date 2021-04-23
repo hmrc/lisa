@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(configuration: Configuration, runMode: RunMode) extends ServicesConfig(configuration: Configuration, runMode: RunMode) {
+class AppConfig @Inject()(configuration: Configuration) extends ServicesConfig(configuration: Configuration) {
 
   lazy val desUrl = baseUrl("des")
   lazy val desAuthToken = getString("desauthtoken")

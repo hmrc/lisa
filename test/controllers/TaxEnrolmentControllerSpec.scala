@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.auth.core.BearerTokenExpired
-import uk.gov.hmrc.http.{HttpResponse, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 
@@ -39,7 +39,7 @@ class TaxEnrolmentControllerSpec extends BaseTestSpec {
   "Get Enrolments for Group ID" should {
     "return the status and body as returned from the connector" when {
       "no errors occur" in {
-        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.successful(HttpResponse(OK, responseString = Some("test"))))
+        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.successful(HttpResponse(OK, "test")))
 
         val res = doGetSubscriptionsForGroupId()
 
@@ -49,7 +49,7 @@ class TaxEnrolmentControllerSpec extends BaseTestSpec {
     }
     "return appropriate 500 internal server error response" when {
       "any errors occur" in {
-        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.failed(Upstream4xxResponse("fail", BAD_REQUEST, BAD_REQUEST)))
+        when(mockTaxEnrolmentConnector.enrolmentStatus(any())(any())).thenReturn(Future.failed(UpstreamErrorResponse("fail", BAD_REQUEST, BAD_REQUEST)))
 
         val res = doGetSubscriptionsForGroupId()
 

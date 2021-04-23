@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HttpResponse, Upstream5xxResponse}
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -38,8 +38,8 @@ class DesConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = ACCEPTED,
-                responseJson = Some(Json.parse(s"""{"SubscriptionID": "928282776"}"""))
+                status = ACCEPTED,
+                body = s"""{"SubscriptionID": "928282776"}"""
               )
             )
           )
@@ -55,14 +55,14 @@ class DesConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = SERVICE_UNAVAILABLE,
-                responseJson = Some(Json.parse(
+                status = SERVICE_UNAVAILABLE,
+                body =
                   s"""
                 {
                   "code": "SERVICE_UNAVAILABLE",
                   "reason": "Dependent systems are currently not responding."
                 }
-                """))
+                """
               )
             )
           )
@@ -77,9 +77,9 @@ class DesConnectorSpec extends BaseTestSpec {
   "Return an exception" when {
     "an invalid status is returned" in {
       when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
-        .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+        .thenReturn(Future.failed(UpstreamErrorResponse("something failed", 502, 500)))
 
-      intercept[Upstream5xxResponse](await(desConnector.subscribe("Z019281", Json.obj())))
+      intercept[UpstreamErrorResponse](await(desConnector.subscribe("Z019281", Json.obj())))
     }
   }
 
@@ -90,8 +90,8 @@ class DesConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = OK,
-                responseJson = Some(Json.parse(
+                status = OK,
+                body =
                   s"""{
                         "safeId": "XE0001234567890",
                         "agentReferenceNumber": "AARN1234567",
@@ -118,7 +118,7 @@ class DesConnectorSpec extends BaseTestSpec {
                           "faxNumber": "01332754256",
                           "emailAddress": "stephen@manncorpone.co.uk"
                         }
-                      }""".stripMargin))
+                      }""".stripMargin
               )
             )
           )
@@ -134,14 +134,14 @@ class DesConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = SERVICE_UNAVAILABLE,
-                responseJson = Some(Json.parse(
+                status = SERVICE_UNAVAILABLE,
+                body =
                   s"""
                 {
                   "code": "SERVICE_UNAVAILABLE",
                   "reason": "Dependent systems are currently not responding."
                 }
-                """))
+                """
               )
             )
           )
@@ -154,9 +154,9 @@ class DesConnectorSpec extends BaseTestSpec {
     "Return an exception" when {
       "an error status is returned" in {
         when(mockHttpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.failed(Upstream5xxResponse("something failed", 502, 500)))
+          .thenReturn(Future.failed(UpstreamErrorResponse("something failed", 502, 500)))
 
-        intercept[Upstream5xxResponse](await(desConnector.register("Z019256", Json.obj())))
+        intercept[UpstreamErrorResponse](await(desConnector.register("Z019256", Json.obj())))
       }
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,24 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) {
 
-  lazy val taxEnrolmentUrl = config.taxEnrolmentUrl
+  lazy val taxEnrolmentUrl: String = config.taxEnrolmentUrl
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
-    Logger.info(s"Tax Enrolment connector get subscriptions $uri")
+    Logger.logger.info(s"Tax Enrolment connector get subscriptions $uri")
     httpClient.GET(uri)
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
-    Logger.info(s"Tax Enrolment connector put subscribe $uri")
+    Logger.logger.info(s"Tax Enrolment connector put subscribe $uri")
     httpClient.PUT(uri, body)
   }
 

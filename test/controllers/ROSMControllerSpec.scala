@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import play.api.mvc.{AnyContentAsJson, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
-import uk.gov.hmrc.http.{HttpResponse, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -48,7 +48,7 @@ class ROSMControllerSpec extends BaseTestSpec {
     "return a 200 ok response" when {
       "everything is valid and no errors are thrown" in {
 
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,Some(Json.parse("{}")))))
+        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,"{}")))
 
         doRegister() { res =>
           status(res) mustBe OK
@@ -58,7 +58,7 @@ class ROSMControllerSpec extends BaseTestSpec {
 
     "return a 400 error response with Invalid UTR as the response code" when {
       "the connector returns a 400 response" in {
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST,Some(Json.parse(regErrorJson)))))
+        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST,regErrorJson)))
 
         doRegister() { res =>
           status(res) mustBe BAD_REQUEST
@@ -97,10 +97,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
 
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT,"")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
           status(res) mustBe (ACCEPTED)
@@ -113,10 +113,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to des fails" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT, "")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
+          thenReturn(Future.failed(UpstreamErrorResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -126,10 +126,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to des returns an unexpected status code" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT, "")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(OK, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(OK, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -139,10 +139,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to tax enrolments fails" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.failed(Upstream4xxResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
+          thenReturn(Future.failed(UpstreamErrorResponse("Bad Request", BAD_REQUEST, BAD_REQUEST)))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -152,10 +152,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to tax enrolments returns an unexpected status code" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED ,"")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{"subscriptionId": "928282776"}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -165,10 +165,10 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the response from des does not contain a subscriptionId" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT)))
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT, "")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED, Some(Json.parse(s"""{}""")))))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{}""")))
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR

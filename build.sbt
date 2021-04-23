@@ -38,9 +38,9 @@ val testScope = "test"
 
 libraryDependencies ++= Seq(
   ws,
-  "uk.gov.hmrc"             %% "bootstrap-play-26"  % "1.5.0",
-  "uk.gov.hmrc"             %% "auth-client"        % "2.35.0-play-26",
-  "uk.gov.hmrc"             %% "domain"             % "5.6.0-play-26",
+  "uk.gov.hmrc"             %% "bootstrap-backend-play-27" % "4.2.0",
+  "uk.gov.hmrc"             %% "auth-client"        % "5.2.0-play-27",
+  "uk.gov.hmrc"             %% "domain"             % "5.11.0-play-27",
   "org.scalatest"           %% "scalatest"          % "3.0.8"             % testScope,
   "org.pegdown"             %  "pegdown"            % "1.6.0"             % testScope,
   "org.mockito"             %  "mockito-core"       % "3.3.0"             % testScope,

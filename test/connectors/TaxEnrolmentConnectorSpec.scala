@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
   "Get enrolment status" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any())(any(), any(), any()))
+        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = ACCEPTED,
-                responseJson = Some(Json.parse(s"""{"status": "PENDING"}"""))
+                status = ACCEPTED,
+                body = (s"""{"status": "PENDING"}""")
               )
             )
           )
@@ -52,12 +52,12 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any())(any(), any(), any()))
+        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = INTERNAL_SERVER_ERROR,
-                responseJson = Some(Json.parse(s"""{"code": "INTERNAL_ERROR"}"""))
+                status = INTERNAL_SERVER_ERROR,
+                body = s"""{"code": "INTERNAL_ERROR"}"""
               )
             )
           )
@@ -77,15 +77,15 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = NO_CONTENT,
-                responseJson = None
+                status = NO_CONTENT,
+                body = ""
               )
             )
           )
 
         doSubscribe { response =>
           response.status must be (NO_CONTENT)
-          response.body must be (null)
+          response.body mustBe  ""
         }
       }
     }
@@ -95,8 +95,8 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
           .thenReturn(
             Future.successful(
               HttpResponse(
-                responseStatus = INTERNAL_SERVER_ERROR,
-                responseJson = Some(Json.parse(s"""{"code": "INTERNAL_ERROR"}"""))
+                status = INTERNAL_SERVER_ERROR,
+                body = s"""{"code": "INTERNAL_ERROR"}"""
               )
             )
           )

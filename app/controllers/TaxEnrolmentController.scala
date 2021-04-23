@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -34,7 +34,7 @@ class TaxEnrolmentController @Inject() (override val authConnector: AuthConnecto
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       connector.enrolmentStatus(groupId)(hc).map {
         response =>
-          Logger.info(s"The connector has returned ${response.status} for $groupId")
+          Logger.logger.info(s"The connector has returned ${response.status} for $groupId")
           Results.Status(response.status)(response.body)
       } recover {
         case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
