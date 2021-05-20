@@ -13,7 +13,7 @@ This service is written in [Scala 2.12](http://www.scala-lang.org/) and [Play 2.
 1. **[Install Service-Manager](https://github.com/hmrc/service-manager/wiki/Install#install-service-manager)**
 2. `git clone git@github.com:hmrc/lisa.git`
 3. `sbt "run 8886"`
-4. `sm --start LISA_FRONTEND_ALL -f`
+4. `sm --start LISA_FRONTEND_ALL`
 
 The unit tests can be run by running
 ```
