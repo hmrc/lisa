@@ -23,13 +23,14 @@ val silencerVersion = "1.7.1"
 
 libraryDependencies ++= Seq(
   ws,
-  "uk.gov.hmrc"             %% "bootstrap-backend-play-27" % "5.3.0",
-  "uk.gov.hmrc"             %% "domain"                    % "5.11.0-play-27",
-  "org.scalatest"           %% "scalatest"                 % "3.0.9"             % Test,
+  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % "5.12.0",
+  "uk.gov.hmrc"             %% "domain"                    % "6.2.0-play-28",
   "org.pegdown"             %  "pegdown"                   % "1.6.0"             % Test,
-  "org.mockito"             %  "mockito-core"              % "3.10.0"            % Test,
   "com.typesafe.play"       %% "play-test"                 % PlayVersion.current % Test,
-  "org.scalatestplus.play"  %% "scalatestplus-play"        % "4.0.3"             % Test,
+  "org.scalatest"           %% "scalatest"                 % "3.2.9"             % Test,
+  "org.scalatestplus.play"  %% "scalatestplus-play"        % "5.1.0"             % Test,
+  "org.scalatestplus"       %% "mockito-3-4"               % "3.2.9.0"           % Test,
+  "com.vladsch.flexmark"    % "flexmark-all"               % "0.36.8"           % Test,
   compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
   "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
 )

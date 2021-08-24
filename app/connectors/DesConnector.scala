@@ -17,16 +17,15 @@
 package connectors
 
 import config.AppConfig
-
-import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpResponse}
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads {
+class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
@@ -40,10 +39,10 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
-    Logger.logger.info(s"DES Connector post subscription ${uri}")
+    logger.info(s"DES Connector post subscription ${uri}")
     httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
       case e: Exception => {
-        Logger.logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
+        logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
         throw e
       }
     }
@@ -51,10 +50,10 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
-    Logger.logger.info(s"DES Connector post registerOnce ${uri}")
+    logger.info(s"DES Connector post registerOnce ${uri}")
     httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
       case e: Exception => {
-        Logger.logger.error(s"Error in DesConnector register : ${e.getMessage}")
+        logger.error(s"Error in DesConnector register : ${e.getMessage}")
         throw e
       }
     }

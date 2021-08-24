@@ -17,15 +17,16 @@
 package controllers
 
 import config.AppConfig
-import javax.inject.Inject
 import connectors.{DesConnector, TaxEnrolmentConnector}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -34,7 +35,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
                                 connector: DesConnector,
                                 enrolmentConnector: TaxEnrolmentConnector,
                                 cc: ControllerComponents,
-                                appConfig: AppConfig) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions {
+                                appConfig: AppConfig) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
@@ -46,12 +47,11 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
 
   private def performRegister(utr: String)(implicit request:Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map { response =>
-      Logger.logger.info(s"The connector has returned ${response.status} for $utr")
-
+      logger.info(s"The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
     } recover {
       case NonFatal(ex: Throwable) => {
-        Logger.logger.warn(s"performRegister: Failed - ${ex.getMessage}")
+        logger.warn(s"performRegister: Failed - ${ex.getMessage}")
         InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     }
@@ -61,7 +61,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       val requestJson: JsValue = request.body.asJson.get
       connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
-        Logger.logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr")
+        logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr")
 
         response.status match {
           case ACCEPTED => {
@@ -69,14 +69,14 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
             val safeId = (requestJson \ "safeId").as[String]
             val subscriptionId = (response.json \ "subscriptionId").as[String]
 
-            Logger.logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+            logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
           }
           case _ => throw new RuntimeException(s"ROSM subscription failed. Returned a response status of ${response.status} for zref $lisaManagerRef")
         }
       } recover {
         case NonFatal(ex: Throwable) => {
-          Logger.logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
+          logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
         }
       }
@@ -89,7 +89,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
     val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> appConfig.rosmCallbackUrl, "etmpId" -> safeId)
 
     enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
-      Logger.logger.info(s"submitSubscription: Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
+      logger.info(s"submitSubscription: Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
 
       enrolRes.status match {
         case NO_CONTENT => success
@@ -107,7 +107,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
       request.getQueryString("subscriptionId").map(id => s", subscriptionId = ${id}").getOrElse("") +
       request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
 
-    Logger.logger.warn(s"Received ROSM subscription callback: $logDetails")
+    logger.warn(s"Received ROSM subscription callback: $logDetails")
 
     Future.successful(NoContent)
   }
