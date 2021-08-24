@@ -17,29 +17,28 @@
 package connectors
 
 import config.AppConfig
-import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) {
+class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends Logging {
 
   lazy val taxEnrolmentUrl: String = config.taxEnrolmentUrl
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
-    Logger.logger.info(s"Tax Enrolment connector get subscriptions $uri")
+    logger.info(s"Tax Enrolment connector get subscriptions $uri")
     httpClient.GET(uri)
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
-    Logger.logger.info(s"Tax Enrolment connector put subscribe $uri")
+    logger.info(s"Tax Enrolment connector put subscribe $uri")
     httpClient.PUT(uri, body)
   }
 
