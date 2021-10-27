@@ -19,7 +19,7 @@ package connectors
 import config.AppConfig
 import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,31 +31,28 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
   lazy val registrationUrl = s"$desUrl/registration/organisation"
 
-  private def updateHeaderCarrier(headerCarrier: HeaderCarrier): HeaderCarrier = {
-    headerCarrier.copy(
-      extraHeaders = Seq("Environment" -> config.desUrlHeaderEnv),
-      authorization = Some(Authorization(s"Bearer ${config.desAuthToken}")))
-  }
+  private val desHeaders: Seq[(String, String)] = Seq(
+    "Environment" -> config.desUrlHeaderEnv,
+    "Authorization" -> s"Bearer ${config.desAuthToken}"
+  )
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
-    logger.info(s"DES Connector post subscription ${uri}")
-    httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
-      case e: Exception => {
+    logger.info(s"DES Connector post subscription $uri")
+    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, hc, implicitly) map { res => res } recover {
+      case e: Exception =>
         logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
         throw e
-      }
     }
   }
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
-    logger.info(s"DES Connector post registerOnce ${uri}")
-    httpClient.POST(uri, payload)(implicitly, httpReads, updateHeaderCarrier(hc), implicitly) map { res => res } recover {
-      case e: Exception => {
+    logger.info(s"DES Connector post registerOnce $uri")
+    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, hc, implicitly) map { res => res } recover {
+      case e: Exception =>
         logger.error(s"Error in DesConnector register : ${e.getMessage}")
         throw e
-      }
     }
   }
 
