@@ -25,7 +25,7 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging {
+class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
@@ -39,7 +39,8 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
     logger.info(s"DES Connector post subscription $uri")
-    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, hc, implicitly) map { res => res } recover {
+    val headerCarrier = addCorrelationId(hc)
+    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, headerCarrier, implicitly) map { res => res } recover {
       case e: Exception =>
         logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
         throw e
@@ -49,7 +50,8 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
     logger.info(s"DES Connector post registerOnce $uri")
-    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, hc, implicitly) map { res => res } recover {
+    val headerCarrier = addCorrelationId(hc)
+    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, headerCarrier, implicitly) map { res => res } recover {
       case e: Exception =>
         logger.error(s"Error in DesConnector register : ${e.getMessage}")
         throw e
