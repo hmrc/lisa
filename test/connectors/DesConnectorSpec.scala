@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,17 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, RequestId, UpstreamErrorResponse}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.io.Source
 
 class DesConnectorSpec extends BaseTestSpec {
-
-  val desConnector = new DesConnector(mockAppConfig, mockHttpClient)
+  val uuid = "123e4567-e89b-42d3-a456-556642440000"
+  val desConnector = new DesConnector(mockAppConfig, mockHttpClient) {
+    override def generateRandomUUID: String = uuid
+  }
 
   "Subscription endpoint" should {
     "Return a status 202" when {
@@ -160,6 +162,27 @@ class DesConnectorSpec extends BaseTestSpec {
       }
     }
   }
+"add correlation id" should {
+  "request id is not present in the headerCarrier" when {
+    "generate random correlation id" in {
+      val hc = HeaderCarrier()
+      desConnector.addCorrelationId(hc) mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> uuid))
+    }
+  }
+ "request id in headerCarrier" when {
+   "request id matches required format(8-4-4-4)" in {
+     val requestId = "abcd0000-dh12-fg34-ij56"
+     val hc = HeaderCarrier(requestId = Some(RequestId(requestId)))
+     desConnector.addCorrelationId(hc) mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> s"$requestId-${uuid.substring(24)}"))
+   }
+
+   "request id does not match required format(8-4-4-4)" in {
+     val requestId = "1a2b-dh12-fg34-ij56"
+     val hc = HeaderCarrier(requestId = Some(RequestId(requestId)))
+     desConnector.addCorrelationId(hc) mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> uuid))
+   }
+ }
+}
 
   private def doSubcribe(callback: HttpResponse => Unit): Unit = {
     val jsVal: JsValue = Json.toJson(Source.fromInputStream(getClass().getResourceAsStream("/json/subscription_example.json")).mkString)

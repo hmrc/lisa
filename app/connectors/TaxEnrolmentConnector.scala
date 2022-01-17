@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,20 +26,22 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends Logging {
+class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val taxEnrolmentUrl: String = config.taxEnrolmentUrl
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
     logger.info(s"Tax Enrolment connector get subscriptions $uri")
-    httpClient.GET(uri)
+    val headerCarrier = addCorrelationId(hc)
+    httpClient.GET(uri)(httpReads, headerCarrier, implicitly)
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
     logger.info(s"Tax Enrolment connector put subscribe $uri")
-    httpClient.PUT(uri, body)
+    val headerCarrier = addCorrelationId(hc)
+    httpClient.PUT(uri, body)(implicitly, httpReads, headerCarrier, implicitly)
   }
 
 }
