@@ -27,15 +27,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 class ROSMController @Inject() (override val authConnector: AuthConnector,
                                 connector: DesConnector,
                                 enrolmentConnector: TaxEnrolmentConnector,
                                 cc: ControllerComponents,
-                                appConfig: AppConfig) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
+                                appConfig: AppConfig) (implicit ec: ExecutionContext) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){

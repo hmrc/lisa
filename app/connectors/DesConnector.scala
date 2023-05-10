@@ -22,10 +22,9 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging with CorrelationGenerator {
+class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) (implicit ec: ExecutionContext) extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"

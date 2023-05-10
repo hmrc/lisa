@@ -18,10 +18,12 @@ publishingSettings
 defaultSettings()
 
 scalaVersion := "2.13.10"
+val bootstrapPlay28 = "7.15.0"
 
 libraryDependencies ++= Seq(
   ws,
-  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % "7.15.0",
+  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % bootstrapPlay28,
+  "uk.gov.hmrc"             %% "bootstrap-test-play-28"    % bootstrapPlay28,
   "uk.gov.hmrc"             %% "domain"                    % "8.3.0-play-28",
   "org.pegdown"             %  "pegdown"                   % "1.6.0"             % Test,
   "com.typesafe.play"       %% "play-test"                 % PlayVersion.current % Test,
