@@ -17,22 +17,18 @@ scalaSettings
 publishingSettings
 defaultSettings()
 
-scalaVersion := "2.12.12"
-
-val silencerVersion = "1.7.1"
+scalaVersion := "2.13.10"
 
 libraryDependencies ++= Seq(
   ws,
-  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % "5.12.0",
-  "uk.gov.hmrc"             %% "domain"                    % "6.2.0-play-28",
+  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % "7.15.0",
+  "uk.gov.hmrc"             %% "domain"                    % "8.3.0-play-28",
   "org.pegdown"             %  "pegdown"                   % "1.6.0"             % Test,
   "com.typesafe.play"       %% "play-test"                 % PlayVersion.current % Test,
   "org.scalatest"           %% "scalatest"                 % "3.2.9"             % Test,
   "org.scalatestplus.play"  %% "scalatestplus-play"        % "5.1.0"             % Test,
   "org.scalatestplus"       %% "mockito-3-4"               % "3.2.9.0"           % Test,
-  "com.vladsch.flexmark"    % "flexmark-all"               % "0.36.8"           % Test,
-  compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-  "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+  "com.vladsch.flexmark"    % "flexmark-all"               % "0.36.8"           % Test
 )
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
@@ -44,5 +40,5 @@ ScoverageKeys.coverageMinimum          := 100
 ScoverageKeys.coverageFailOnMinimum    := false
 ScoverageKeys.coverageHighlighting     := true
 
-scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes")
-
+scalacOptions += "-Wconf:src=routes/.*:s"
+scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s"
