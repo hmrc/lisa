@@ -25,8 +25,6 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
@@ -199,13 +197,13 @@ class ROSMControllerSpec extends BaseTestSpec {
     }
   }
 
-  def doRegister()(callback: (Future[Result]) => Unit) {
+  def doRegister()(callback: (Future[Result]) => Unit) : Unit = {
     val res = await(rosmController.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
 
     callback(Future(res))
   }
 
-  def doSubscribe()(callback: (Future[Result]) => Unit) {
+  def doSubscribe()(callback: (Future[Result]) => Unit) : Unit = {
     val res = await(rosmController.submitSubscription("1234567890", "Z1234")
       .apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
 

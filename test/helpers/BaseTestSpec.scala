@@ -26,7 +26,7 @@ import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-
+import scala.concurrent.ExecutionContext
 trait BaseTestSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   lazy val mockDesConnector: DesConnector = mock[DesConnector]
@@ -37,5 +37,7 @@ trait BaseTestSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite w
   lazy val mockHttpClient: HttpClient = mock[HttpClient]
 
   implicit def hc: HeaderCarrier = HeaderCarrier()
+
+  implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
 }

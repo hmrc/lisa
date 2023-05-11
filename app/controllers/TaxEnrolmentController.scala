@@ -24,11 +24,12 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, Autho
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class TaxEnrolmentController @Inject() (override val authConnector: AuthConnector,
                                         connector: TaxEnrolmentConnector,
                                         val cc: ControllerComponents)
+                                       (implicit ec: ExecutionContext)
   extends BackendController(cc: ControllerComponents)
     with AuthorisedFunctions
     with Logging {

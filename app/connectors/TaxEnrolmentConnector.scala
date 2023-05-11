@@ -19,14 +19,12 @@ package connectors
 import config.AppConfig
 import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) extends RawResponseReads with Logging with CorrelationGenerator {
+class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) (implicit ec: ExecutionContext) extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val taxEnrolmentUrl: String = config.taxEnrolmentUrl
 

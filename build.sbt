@@ -2,7 +2,6 @@
 import play.core.PlayVersion
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "lisa"
 name                      := "lisa"
@@ -14,25 +13,26 @@ lazy val lisa = Project(appName, file("."))
 enablePlugins(PlayScala, SbtDistributablesPlugin)
 
 scalaSettings
-publishingSettings
 defaultSettings()
 
-scalaVersion := "2.12.12"
+scalaVersion := "2.13.10"
+val bootstrapPlay28 = "7.15.0"
 
-val silencerVersion = "1.7.1"
+ThisBuild / libraryDependencySchemes ++= Seq(
+  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+)
 
 libraryDependencies ++= Seq(
   ws,
-  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % "5.12.0",
-  "uk.gov.hmrc"             %% "domain"                    % "6.2.0-play-28",
+  "uk.gov.hmrc"             %% "bootstrap-backend-play-28" % bootstrapPlay28,
+  "uk.gov.hmrc"             %% "domain"                    % "8.3.0-play-28",
   "org.pegdown"             %  "pegdown"                   % "1.6.0"             % Test,
   "com.typesafe.play"       %% "play-test"                 % PlayVersion.current % Test,
-  "org.scalatest"           %% "scalatest"                 % "3.2.9"             % Test,
+  "org.scalatest"           %% "scalatest"                 % "3.2.15"            % Test,
   "org.scalatestplus.play"  %% "scalatestplus-play"        % "5.1.0"             % Test,
-  "org.scalatestplus"       %% "mockito-3-4"               % "3.2.9.0"           % Test,
-  "com.vladsch.flexmark"    % "flexmark-all"               % "0.36.8"           % Test,
-  compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-  "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+  "org.scalatestplus"       %% "mockito-3-4"               % "3.2.10.0"          % Test,
+  "com.vladsch.flexmark"    % "flexmark-all"               % "0.64.4"            % Test,
+  "uk.gov.hmrc"             %% "bootstrap-test-play-28"    % bootstrapPlay28     % Test
 )
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
@@ -40,9 +40,9 @@ Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
 Test / fork                            := true
 
 ScoverageKeys.coverageExcludedPackages := "<empty>;testOnlyDoNotUseInAppConf.*;config.*;.metrics.*;prod.*;app.*;MicroService*;uk.gov.hmrc.BuildInfo"
-ScoverageKeys.coverageMinimum          := 100
 ScoverageKeys.coverageFailOnMinimum    := false
 ScoverageKeys.coverageHighlighting     := true
 
-scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes")
+scalacOptions += "-Wconf:src=routes/.*:s"
 
+addCommandAlias("scalastyleAll", "all scalastyle test:scalastyle")
