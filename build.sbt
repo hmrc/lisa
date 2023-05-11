@@ -15,7 +15,7 @@ enablePlugins(PlayScala, SbtDistributablesPlugin)
 scalaSettings
 defaultSettings()
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.10"
 val bootstrapPlay28 = "7.15.0"
 
 ThisBuild / libraryDependencySchemes ++= Seq(
@@ -28,10 +28,10 @@ libraryDependencies ++= Seq(
   "uk.gov.hmrc"             %% "domain"                    % "8.3.0-play-28",
   "org.pegdown"             %  "pegdown"                   % "1.6.0"             % Test,
   "com.typesafe.play"       %% "play-test"                 % PlayVersion.current % Test,
-  "org.scalatest"           %% "scalatest"                 % "3.2.9"             % Test,
+  "org.scalatest"           %% "scalatest"                 % "3.2.15"            % Test,
   "org.scalatestplus.play"  %% "scalatestplus-play"        % "5.1.0"             % Test,
-  "org.scalatestplus"       %% "mockito-3-4"               % "3.2.9.0"           % Test,
-  "com.vladsch.flexmark"    % "flexmark-all"               % "0.36.8"            % Test,
+  "org.scalatestplus"       %% "mockito-3-4"               % "3.2.10.0"          % Test,
+  "com.vladsch.flexmark"    % "flexmark-all"               % "0.64.4"            % Test,
   "uk.gov.hmrc"             %% "bootstrap-test-play-28"    % bootstrapPlay28     % Test
 )
 
