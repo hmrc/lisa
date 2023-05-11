@@ -24,8 +24,6 @@ import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.auth.core.BearerTokenExpired
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TaxEnrolmentControllerSpec extends BaseTestSpec {
