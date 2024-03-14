@@ -16,12 +16,9 @@ scalaSettings
 defaultSettings()
 disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
 
-scalaVersion := "2.13.11"
+scalaVersion := "2.13.13"
 
 libraryDependencies ++= AppDependencies()
-ThisBuild / libraryDependencySchemes ++= Seq(
-  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
-)
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
 
