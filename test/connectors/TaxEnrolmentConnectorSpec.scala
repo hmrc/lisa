@@ -28,12 +28,12 @@ import scala.concurrent.{Await, Future}
 
 class TaxEnrolmentConnectorSpec extends BaseTestSpec {
 
-  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClient)
+  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClientV2)
 
   "Get enrolment status" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpClientV2.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -51,7 +51,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpClientV2.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -72,7 +72,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
   "Subscribe" should {
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClientV2.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -90,7 +90,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockHttpClientV2.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(

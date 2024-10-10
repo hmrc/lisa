@@ -19,12 +19,13 @@ package connectors
 import config.AppConfig
 import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) (implicit ec: ExecutionContext) extends RawResponseReads with Logging with CorrelationGenerator {
+class DesConnector @Inject()(config: AppConfig, httpClientV2: HttpClientV2)(implicit ec: ExecutionContext) extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val desUrl = config.desUrl
   lazy val subscriptionUrl = s"$desUrl/lifetime-isa/manager"
@@ -37,25 +38,22 @@ class DesConnector @Inject() (config: AppConfig, httpClient: HttpClient) (implic
 
   def subscribe(lisaManager: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
-    logger.info(s"DES Connector post subscription $uri")
-    val headerCarrier = addCorrelationId(hc)
-    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, headerCarrier, implicitly) map { res => res } recover {
-      case e: Exception =>
-        logger.error(s"Error in DesConnector subscribe: ${e.getMessage}")
-        throw e
-    }
+    httpPost(uri, payload, "subscribe", "subscription")
   }
 
   def register(utr: String, payload: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
-    logger.info(s"DES Connector post registerOnce $uri")
+    httpPost(uri, payload, "register", "registerOnce")
+  }
+
+  private def httpPost(uri: String, payload: JsValue, urlType: String, connectorLog: String)(implicit hc: HeaderCarrier) = {
+    logger.info(s"DES Connector post $connectorLog $uri")
     val headerCarrier = addCorrelationId(hc)
-    httpClient.POST(uri, payload, desHeaders)(implicitly, httpReads, headerCarrier, implicitly) map { res => res } recover {
+    httpClientV2.post(url"uri")(headerCarrier).setHeader(desHeaders: _*).withBody(payload).execute recover {
       case e: Exception =>
-        logger.error(s"Error in DesConnector register : ${e.getMessage}")
+        logger.error(s"Error in DesConnector $urlType : ${e.getMessage}")
         throw e
     }
   }
-
 
 }
