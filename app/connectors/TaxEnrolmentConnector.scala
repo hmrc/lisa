@@ -33,13 +33,13 @@ class TaxEnrolmentConnector @Inject()(config: AppConfig, httpClientV2: HttpClien
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
     logger.info(s"Tax Enrolment connector get subscriptions $uri")
-    httpClientV2.get(url"uri")(addCorrelationId(hc)).execute
+    httpClientV2.get(url"$uri")(addCorrelationId(hc)).execute
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
     logger.info(s"Tax Enrolment connector put subscribe $uri")
-    httpClientV2.put(url"uri")(addCorrelationId(hc)).withBody(body).execute
+    httpClientV2.put(url"$uri")(addCorrelationId(hc)).withBody(body).execute
   }
 
 }

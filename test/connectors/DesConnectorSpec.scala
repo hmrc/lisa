@@ -34,8 +34,10 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
     override def generateRandomUUID: String = uuid
   }
 
+  when(mockAppConfig.desUrl).thenReturn("http://localhost:1234")
   when(mockHttpClientV2.post(any())(any())).thenReturn(mockRequestBuilder)
   when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+  when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
 
   "Subscription endpoint" should {
     "Return a status 202" when {

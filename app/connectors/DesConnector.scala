@@ -50,7 +50,7 @@ class DesConnector @Inject()(config: AppConfig, httpClientV2: HttpClientV2)(impl
   private def httpPost(uri: String, payload: JsValue, urlType: String, connectorLog: String)(implicit hc: HeaderCarrier) = {
     logger.info(s"DES Connector post $connectorLog $uri")
     val headerCarrier = addCorrelationId(hc)
-    httpClientV2.post(url"uri")(headerCarrier).setHeader(desHeaders: _*).withBody(payload).execute recover {
+    httpClientV2.post(url"$uri")(headerCarrier).setHeader(desHeaders: _*).withBody(payload).execute recover {
       case e: Exception =>
         logger.error(s"Error in DesConnector $urlType : ${e.getMessage}")
         throw e

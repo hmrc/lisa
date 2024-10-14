@@ -16,7 +16,7 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-test-play-30"    % bootstrapPlayVersion,
     "org.pegdown"             %  "pegdown"                   % "1.6.0",
     "org.playframework"       %% "play-test"                 % PlayVersion.current,
-    "org.scalatest"           %% "scalatest"                 % "3.2.18",
+    "org.scalatest"           %% "scalatest"                 % "3.2.19",
     "org.scalatestplus.play"  %% "scalatestplus-play"        % "7.0.1",
     "org.scalatestplus"       %% "mockito-3-4"               % "3.2.10.0",
     "com.vladsch.flexmark"    % "flexmark-all"               % "0.64.8"
