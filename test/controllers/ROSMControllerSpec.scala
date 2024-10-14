@@ -19,12 +19,14 @@ package controllers
 import helpers.BaseTestSpec
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
+import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsJson, Result}
-import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+
 import scala.concurrent.Future
 import scala.io.Source
 
@@ -101,7 +103,7 @@ class ROSMControllerSpec extends BaseTestSpec {
           thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
-          status(res) mustBe (ACCEPTED)
+          status(res) mustBe ACCEPTED
           (contentAsJson(res) \ "subscriptionId").as[String] mustBe "928282776"
         }
       }
@@ -197,13 +199,13 @@ class ROSMControllerSpec extends BaseTestSpec {
     }
   }
 
-  def doRegister()(callback: (Future[Result]) => Unit) : Unit = {
+  def doRegister()(callback: Future[Result] => Unit) : Unit = {
     val res = await(rosmController.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
 
     callback(Future(res))
   }
 
-  def doSubscribe()(callback: (Future[Result]) => Unit) : Unit = {
+  def doSubscribe()(callback: Future[Result] => Unit) : Unit = {
     val res = await(rosmController.submitSubscription("1234567890", "Z1234")
       .apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
 

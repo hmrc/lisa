@@ -20,7 +20,7 @@ import config.AppConfig
 import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc._
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result, Results}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,7 +34,8 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
                                 connector: DesConnector,
                                 enrolmentConnector: TaxEnrolmentConnector,
                                 cc: ControllerComponents,
-                                appConfig: AppConfig) (implicit ec: ExecutionContext) extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
+                                appConfig: AppConfig) (implicit ec: ExecutionContext)
+  extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
@@ -49,10 +50,9 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
       logger.info(s"The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
     } recover {
-      case NonFatal(ex: Throwable) => {
+      case NonFatal(ex: Throwable) =>
         logger.warn(s"performRegister: Failed - ${ex.getMessage}")
         InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
-      }
     }
   }
 
@@ -63,21 +63,19 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
         logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr")
 
         response.status match {
-          case ACCEPTED => {
+          case ACCEPTED =>
             val success = Results.Status(response.status)(response.body)
             val safeId = (requestJson \ "safeId").as[String]
             val subscriptionId = (response.json \ "subscriptionId").as[String]
 
             logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
-          }
           case _ => throw new RuntimeException(s"ROSM subscription failed. Returned a response status of ${response.status} for zref $lisaManagerRef")
         }
       } recover {
-        case NonFatal(ex: Throwable) => {
+        case NonFatal(ex: Throwable) =>
           logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
-        }
       }
     } recover {
       case _ => Unauthorized
@@ -92,10 +90,9 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
 
       enrolRes.status match {
         case NO_CONTENT => success
-        case _ => {
+        case _ =>
           val msg = s"Tax Enrolment subscription failed. Returned a response status of ${enrolRes.status} for subscriptionId $subscriptionId and safeId $safeId"
           throw new RuntimeException(msg)
-        }
       }
     }
   }
@@ -103,7 +100,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
   def subscriptionCallback: Action[AnyContent] = Action.async { request =>
     val logDetails =
       s"method = ${request.method}" +
-      request.getQueryString("subscriptionId").map(id => s", subscriptionId = ${id}").getOrElse("") +
+      request.getQueryString("subscriptionId").map(id => s", subscriptionId = $id").getOrElse("") +
       request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
 
     logger.warn(s"Received ROSM subscription callback: $logDetails")

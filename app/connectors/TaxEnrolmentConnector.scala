@@ -19,27 +19,27 @@ package connectors
 import config.AppConfig
 import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class TaxEnrolmentConnector @Inject() (config: AppConfig, httpClient: HttpClient) (implicit ec: ExecutionContext) extends RawResponseReads with Logging with CorrelationGenerator {
+class TaxEnrolmentConnector @Inject()(config: AppConfig, httpClientV2: HttpClientV2)(implicit ec: ExecutionContext)
+  extends RawResponseReads with Logging with CorrelationGenerator {
 
   lazy val taxEnrolmentUrl: String = config.taxEnrolmentUrl
 
   def enrolmentStatus(groupId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/groups/$groupId/subscriptions"
     logger.info(s"Tax Enrolment connector get subscriptions $uri")
-    val headerCarrier = addCorrelationId(hc)
-    httpClient.GET(uri)(httpReads, headerCarrier, implicitly)
+    httpClientV2.get(url"$uri")(addCorrelationId(hc)).execute
   }
 
   def subscribe(subscriptionId: String, body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$taxEnrolmentUrl/subscriptions/$subscriptionId/subscriber"
     logger.info(s"Tax Enrolment connector put subscribe $uri")
-    val headerCarrier = addCorrelationId(hc)
-    httpClient.PUT(uri, body)(implicitly, httpReads, headerCarrier, implicitly)
+    httpClientV2.put(url"$uri")(addCorrelationId(hc)).withBody(body).execute
   }
 
 }

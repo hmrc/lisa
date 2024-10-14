@@ -19,26 +19,30 @@ package connectors
 import helpers.BaseTestSpec
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR, NO_CONTENT}
 import play.api.libs.json.Json
-import play.api.mvc.AnyContent
-import play.api.test.Helpers._
 import uk.gov.hmrc.http.HttpResponse
+
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 class TaxEnrolmentConnectorSpec extends BaseTestSpec {
 
-  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClient)
+  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClientV2)
+
+  when(mockAppConfig.taxEnrolmentUrl).thenReturn("http://localhost:1234") 
 
   "Get enrolment status" should {
+    when(mockHttpClientV2.get(any())(any())).thenReturn(mockRequestBuilder)
+    
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
                 status = ACCEPTED,
-                body = (s"""{"status": "PENDING"}""")
+                body = s"""{"status": "PENDING"}"""
               )
             )
           )
@@ -51,7 +55,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
+        when(mockHttpClientV2.get(any())(any()).execute[HttpResponse](any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -70,9 +74,12 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
   }
 
   "Subscribe" should {
+    when(mockHttpClientV2.put(any())(any())).thenReturn(mockRequestBuilder)
+    when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+    
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -90,7 +97,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClient.PUT[AnyContent, HttpResponse](any(), any(), any())(any(), any(), any(), any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
