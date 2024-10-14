@@ -30,10 +30,14 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
 
   val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClientV2)
 
+  when(mockAppConfig.taxEnrolmentUrl).thenReturn("http://domain") 
+
   "Get enrolment status" should {
+    when(mockHttpClientV2.get(any())(any())).thenReturn(mockRequestBuilder)
+    
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClientV2.get(any())(any()).execute[HttpResponse](any(), any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -70,9 +74,12 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
   }
 
   "Subscribe" should {
+    when(mockHttpClientV2.put(any())(any())).thenReturn(mockRequestBuilder)
+    when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+    
     "return a success verbatim" when {
       "a successful response is returned from tax enrolment" in {
-        when(mockHttpClientV2.put(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -90,7 +97,7 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
     }
     "return an error verbatim" when {
       "an error is returned from tax enrolment" in {
-        when(mockHttpClientV2.put(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(

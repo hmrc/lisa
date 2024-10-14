@@ -34,11 +34,14 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
     override def generateRandomUUID: String = uuid
   }
 
+  when(mockHttpClientV2.post(any())(any())).thenReturn(mockRequestBuilder)
+  when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+
   "Subscription endpoint" should {
     "Return a status 202" when {
       "Valid json posted" in {
 
-        when(mockHttpClientV2.post(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -55,7 +58,7 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpClientV2.post(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -80,7 +83,7 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
 
   "Return an exception" when {
     "an invalid status is returned" in {
-      when(mockHttpClientV2.post(any())(any()).withBody(any()).execute(any(),any()))
+      when(mockRequestBuilder.execute[HttpResponse](any(),any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("something failed", 502, 500)))
 
       intercept[UpstreamErrorResponse](await(desConnector.subscribe("Z019281", Json.obj())))
@@ -90,7 +93,7 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
   "Registration endpoint" should {
     "Return a status 200" when {
       "Valid json posted" in {
-        when(mockHttpClientV2.post(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -134,7 +137,7 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
     }
     "Return a status 503" when {
       "invalid json posted" in {
-        when(mockHttpClientV2.post(any())(any()).withBody(any()).execute[HttpResponse](any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(
             Future.successful(
               HttpResponse(
@@ -157,7 +160,7 @@ class DesConnectorSpec extends BaseTestSpec {// scalastyle:off magic.number
     }
     "Return an exception" when {
       "an error status is returned" in {
-        when(mockHttpClientV2.post(any())(any()).withBody(any()).execute(any(),any()))
+        when(mockRequestBuilder.execute[HttpResponse](any(),any()))
           .thenReturn(Future.failed(UpstreamErrorResponse("something failed", 502, 500)))
 
         intercept[UpstreamErrorResponse](await(desConnector.register("Z019256", Json.obj())))
