@@ -19,11 +19,13 @@ package controllers
 import helpers.BaseTestSpec
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status}
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+
 import scala.concurrent.Future
 
 class TaxEnrolmentControllerSpec extends BaseTestSpec {

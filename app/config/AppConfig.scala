@@ -21,7 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(configuration: Configuration) extends ServicesConfig(configuration: Configuration) {
+class AppConfig @Inject()(configuration: Configuration) extends ServicesConfig(configuration) {
 
   lazy val desUrl = baseUrl("des")
   lazy val desAuthToken = getString("desauthtoken")
