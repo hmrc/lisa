@@ -29,5 +29,6 @@ class AppConfig @Inject()(configuration: Configuration) extends ServicesConfig(c
 
   lazy val taxEnrolmentUrl: String = baseUrl("tax-enrolments") + "/tax-enrolments"
   lazy val rosmCallbackUrl: String = getString("rosmCallbackUrl")
+  lazy val appName: String = getString("appName")
 
 }

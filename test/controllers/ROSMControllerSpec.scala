@@ -17,8 +17,9 @@
 package controllers
 
 import helpers.BaseTestSpec
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{reset, when}
+import org.mockito.Mockito.{reset, verify, when}
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsJson, Result}
@@ -32,7 +33,7 @@ import scala.io.Source
 
 class ROSMControllerSpec extends BaseTestSpec {
 
-  lazy val rosmController = new ROSMController(mockAuthCon, mockDesConnector, mockTaxEnrolmentConnector, controllerComponents, mockAppConfig)
+  lazy val rosmController = new ROSMController(mockAuthCon, mockDesConnector, mockTaxEnrolmentConnector, controllerComponents, mockAuditService, mockAppConfig)
 
   override def beforeEach(): Unit = {
     reset(mockDesConnector)
@@ -48,7 +49,7 @@ class ROSMControllerSpec extends BaseTestSpec {
     "return a 200 ok response" when {
       "everything is valid and no errors are thrown" in {
 
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(OK,"{}")))
+        when(mockDesConnector.register(any(), any())(any())).thenReturn(Future.successful(HttpResponse(OK, "{}")))
 
         doRegister() { res =>
           status(res) mustBe OK
@@ -58,7 +59,7 @@ class ROSMControllerSpec extends BaseTestSpec {
 
     "return a 400 error response with Invalid UTR as the response code" when {
       "the connector returns a 400 response" in {
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST,regErrorJson)))
+        when(mockDesConnector.register(any(), any())(any())).thenReturn(Future.successful(HttpResponse(BAD_REQUEST, regErrorJson)))
 
         doRegister() { res =>
           status(res) mustBe BAD_REQUEST
@@ -69,7 +70,7 @@ class ROSMControllerSpec extends BaseTestSpec {
 
     "return a 500 error response" when {
       "the connector returns an error" in {
-        when(mockDesConnector.register(any(),any())(any())).thenReturn(Future.failed(new Exception("Error")))
+        when(mockDesConnector.register(any(), any())(any())).thenReturn(Future.failed(new Exception("Error")))
 
         doRegister() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
@@ -97,13 +98,20 @@ class ROSMControllerSpec extends BaseTestSpec {
 
 
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(NO_CONTENT,"")))
+          thenReturn(Future.successful(HttpResponse(NO_CONTENT, "")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
 
         doSubscribe() { res =>
           status(res) mustBe ACCEPTED
+          verify(mockAuditService).audit(
+            auditType = ArgumentMatchers.eq("submitSubscriptionFailed"),
+            path = ArgumentMatchers.eq("submitSubscription"),
+            auditData = ArgumentMatchers.eq(Map(
+              "response" -> status(res).toString,
+              "lisaManagerRef" -> "Z1234")))(any)
+
           (contentAsJson(res) \ "subscriptionId").as[String] mustBe "928282776"
         }
       }
@@ -120,6 +128,13 @@ class ROSMControllerSpec extends BaseTestSpec {
 
         doSubscribe() { res =>
           status(res) mustBe INTERNAL_SERVER_ERROR
+          verify(mockAuditService).audit(
+            auditType = ArgumentMatchers.eq("submitSubscriptionFailed"),
+            path = ArgumentMatchers.eq("submitSubscription"),
+            auditData = ArgumentMatchers.eq(Map(
+              "error" -> "Bad Request",
+              "lisaManagerRef" -> "Z1234")))(any)
+
           (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
         }
       }
@@ -152,7 +167,7 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to tax enrolments returns an unexpected status code" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(any())).
-          thenReturn(Future.successful(HttpResponse(ACCEPTED ,"")))
+          thenReturn(Future.successful(HttpResponse(ACCEPTED, "")))
 
         when(mockDesConnector.subscribe(any(), any())(any())).
           thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
@@ -199,13 +214,13 @@ class ROSMControllerSpec extends BaseTestSpec {
     }
   }
 
-  def doRegister()(callback: Future[Result] => Unit) : Unit = {
+  def doRegister()(callback: Future[Result] => Unit): Unit = {
     val res = await(rosmController.register("1234567890").apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(regPayload)))))
 
     callback(Future(res))
   }
 
-  def doSubscribe()(callback: Future[Result] => Unit) : Unit = {
+  def doSubscribe()(callback: Future[Result] => Unit): Unit = {
     val res = await(rosmController.submitSubscription("1234567890", "Z1234")
       .apply(FakeRequest(Helpers.PUT, "/").withBody(AnyContentAsJson(Json.parse(subscribePayload)))))
 
