@@ -26,7 +26,7 @@ import play.api.mvc.{AnyContentAsJson, Result}
 import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
-import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -106,11 +106,14 @@ class ROSMControllerSpec extends BaseTestSpec {
         doSubscribe() { res =>
           status(res) mustBe ACCEPTED
           verify(mockAuditService).audit(
-            auditType = ArgumentMatchers.eq("submitSubscriptionFailed"),
+            auditType = ArgumentMatchers.eq("submitSubscriptionSuccess"),
             path = ArgumentMatchers.eq("submitSubscription"),
             auditData = ArgumentMatchers.eq(Map(
               "response" -> status(res).toString,
-              "lisaManagerRef" -> "Z1234")))(any)
+              "safeId" -> "XE0001234567890",
+              "lisaManagerRef" -> "Z1234",
+              "subscriptionId" -> "928282776")
+            ))(any[HeaderCarrier])
 
           (contentAsJson(res) \ "subscriptionId").as[String] mustBe "928282776"
         }
@@ -133,7 +136,7 @@ class ROSMControllerSpec extends BaseTestSpec {
             path = ArgumentMatchers.eq("submitSubscription"),
             auditData = ArgumentMatchers.eq(Map(
               "error" -> "Bad Request",
-              "lisaManagerRef" -> "Z1234")))(any)
+              "lisaManagerRef" -> "Z1234")))(any[HeaderCarrier])
 
           (contentAsJson(res) \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
         }

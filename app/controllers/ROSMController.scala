@@ -74,7 +74,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
 
             auditService.audit(auditType = "submitSubscriptionSuccess",
               path = "submitSubscription",
-              auditData = Map("success" -> success.toString(),
+              auditData = Map("response" -> response.status.toString,
                 "safeId" -> safeId,
                 "lisaManagerRef" -> lisaManagerRef,
                 "subscriptionId" -> subscriptionId)
