@@ -1,5 +1,4 @@
 
-import play.core.PlayVersion
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
 
@@ -16,7 +15,7 @@ scalaSettings
 defaultSettings()
 disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
 
-scalaVersion := "2.13.15"
+scalaVersion := "2.13.16"
 
 libraryDependencies ++= AppDependencies()
 

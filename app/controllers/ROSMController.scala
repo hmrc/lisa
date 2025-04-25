@@ -21,6 +21,7 @@ import connectors.{DesConnector, TaxEnrolmentConnector}
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result, Results}
+import services.AuditService
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,22 +31,23 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class ROSMController @Inject() (override val authConnector: AuthConnector,
-                                connector: DesConnector,
-                                enrolmentConnector: TaxEnrolmentConnector,
-                                cc: ControllerComponents,
-                                appConfig: AppConfig) (implicit ec: ExecutionContext)
+class ROSMController @Inject()(override val authConnector: AuthConnector,
+                               connector: DesConnector,
+                               enrolmentConnector: TaxEnrolmentConnector,
+                               cc: ControllerComponents,
+                               implicit val auditService: AuditService,
+                               appConfig: AppConfig)(implicit ec: ExecutionContext)
   extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
-    authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)){
+    authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       performRegister(utr)(request)
     } recover {
       case _ => Unauthorized
     }
   }
 
-  private def performRegister(utr: String)(implicit request:Request[AnyContent]): Future[Result] = {
+  private def performRegister(utr: String)(implicit request: Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map { response =>
       logger.info(s"The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
@@ -56,7 +58,7 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
     }
   }
 
-  def submitSubscription(utr: String, lisaManagerRef:String): Action[AnyContent] = Action.async { implicit request =>
+  def submitSubscription(utr: String, lisaManagerRef: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       val requestJson: JsValue = request.body.asJson.get
       connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
@@ -69,11 +71,31 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
             val subscriptionId = (response.json \ "subscriptionId").as[String]
 
             logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+
+            auditService.audit(auditType = "submitSubscriptionSuccess",
+              path = "submitSubscription",
+              auditData = Map("response" -> response.status.toString,
+                "safeId" -> safeId,
+                "lisaManagerRef" -> lisaManagerRef,
+                "subscriptionId" -> subscriptionId)
+            )
+
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
-          case _ => throw new RuntimeException(s"ROSM subscription failed. Returned a response status of ${response.status} for zref $lisaManagerRef")
+          case _ =>
+            auditService.audit(auditType = "submitSubscriptionFailed",
+              path = "submitSubscription",
+              auditData = Map("response" -> response.status.toString,
+                "lisaManagerRef" -> lisaManagerRef)
+            )
+            throw new RuntimeException(s"ROSM subscription failed. Returned a response status of ${response.status} for zref $lisaManagerRef")
         }
       } recover {
         case NonFatal(ex: Throwable) =>
+          auditService.audit(auditType = "submitSubscriptionFailed",
+            path = "submitSubscription",
+            auditData = Map("error" -> ex.getMessage,
+              "lisaManagerRef" -> lisaManagerRef)
+          )
           logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
@@ -100,8 +122,8 @@ class ROSMController @Inject() (override val authConnector: AuthConnector,
   def subscriptionCallback: Action[AnyContent] = Action.async { request =>
     val logDetails =
       s"method = ${request.method}" +
-      request.getQueryString("subscriptionId").map(id => s", subscriptionId = $id").getOrElse("") +
-      request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
+        request.getQueryString("subscriptionId").map(id => s", subscriptionId = $id").getOrElse("") +
+        request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
 
     logger.warn(s"Received ROSM subscription callback: $logDetails")
 

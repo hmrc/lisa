@@ -24,6 +24,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.stubControllerComponents
+import services.AuditService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,6 +39,7 @@ trait BaseTestSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite w
   lazy val mockAppConfig: AppConfig = mock[AppConfig]
   lazy val mockHttpClientV2: HttpClientV2 = mock[HttpClientV2]
   lazy val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
+  lazy val mockAuditService: AuditService = mock[AuditService]
 
   implicit def hc: HeaderCarrier = HeaderCarrier()
 
