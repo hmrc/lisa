@@ -53,7 +53,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
       Results.Status(response.status)(response.body)
     } recover {
       case NonFatal(ex: Throwable) =>
-        logger.warn(s"performRegister: Failed - ${ex.getMessage}")
+        logger.warn(s"performRegister: Failed for UTR : $utr - ${ex.getMessage}")
         InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
     }
   }
@@ -62,7 +62,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       val requestJson: JsValue = request.body.asJson.get
       connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
-        logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr")
+        logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr, lisaManager : $lisaManagerRef")
 
         response.status match {
           case ACCEPTED =>
@@ -82,6 +82,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
 
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
           case _ =>
+            logger.info(s"submitSubscription: ROSM subscription failed with code ${response.status} for zref $lisaManagerRef")
             auditService.audit(auditType = "submitSubscriptionFailed",
               path = "submitSubscription",
               auditData = Map("response" -> response.status.toString,
@@ -96,7 +97,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
             auditData = Map("error" -> ex.getMessage,
               "lisaManagerRef" -> lisaManagerRef)
           )
-          logger.warn(s"submitSubscription: Failed - ${ex.getMessage}")
+          logger.warn(s"submitSubscription: Failed - ${ex.getMessage} for zref $lisaManagerRef")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     } recover {
