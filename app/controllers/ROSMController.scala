@@ -49,11 +49,11 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
 
   private def performRegister(utr: String)(implicit request: Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map { response =>
-      logger.info(s"The connector has returned ${response.status} for $utr")
+      logger.info(s"performRegister: The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
     } recover {
       case NonFatal(ex: Throwable) =>
-        logger.warn(s"performRegister: Failed for UTR : $utr - ${ex.getMessage}")
+        logger.warn(s"performRegister: Failed for UTR : $utr - ${ex.getMessage} returning INTERNAL_SERVER_ERROR")
         InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
     }
   }
