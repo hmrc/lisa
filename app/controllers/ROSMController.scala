@@ -49,11 +49,11 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
 
   private def performRegister(utr: String)(implicit request: Request[AnyContent]): Future[Result] = {
     connector.register(utr, request.body.asJson.get).map { response =>
-      logger.info(s"performRegister: The connector has returned ${response.status} for $utr")
+      logger.info(s"[ROSMController][performRegister] The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
     } recover {
       case NonFatal(ex: Throwable) =>
-        logger.warn(s"performRegister: Failed for UTR : $utr - ${ex.getMessage} returning INTERNAL_SERVER_ERROR")
+        logger.error(s"[ROSMController][performRegister] Failed for UTR : $utr - ${ex.getMessage} returning INTERNAL_SERVER_ERROR")
         InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
     }
   }
@@ -62,7 +62,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       val requestJson: JsValue = request.body.asJson.get
       connector.subscribe(lisaManagerRef, requestJson).flatMap { response =>
-        logger.info(s"submitSubscription: Response from Connector ${response.status} for $utr, lisaManager : $lisaManagerRef")
+        logger.info(s"[ROSMController][submitSubscription Response from Connector ${response.status} for $utr, lisaManager : $lisaManagerRef")
 
         response.status match {
           case ACCEPTED =>
@@ -70,7 +70,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
             val safeId = (requestJson \ "safeId").as[String]
             val subscriptionId = (response.json \ "subscriptionId").as[String]
 
-            logger.info(s"submitSubscription: calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
+            logger.info(s"[ROSMController][submitSubscription] calling Tax Enrolments with subscriptionId $subscriptionId and safeId $safeId")
 
             auditService.audit(auditType = "submitSubscriptionSuccess",
               path = "submitSubscription",
@@ -82,7 +82,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
 
             submitTaxEnrolmentSubscription(subscriptionId, safeId, success)
           case _ =>
-            logger.info(s"submitSubscription: ROSM subscription failed with code ${response.status} for zref $lisaManagerRef")
+            logger.warn(s"[ROSMController][submitSubscription] ROSM subscription failed with code ${response.status} for zref $lisaManagerRef")
             auditService.audit(auditType = "submitSubscriptionFailed",
               path = "submitSubscription",
               auditData = Map("response" -> response.status.toString,
@@ -97,7 +97,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
             auditData = Map("error" -> ex.getMessage,
               "lisaManagerRef" -> lisaManagerRef)
           )
-          logger.warn(s"submitSubscription: Failed - ${ex.getMessage} for zref $lisaManagerRef")
+          logger.error(s"[ROSMController][submitSubscription] Failed - ${ex.getMessage} for zref $lisaManagerRef")
           InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     } recover {
@@ -109,7 +109,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
     val enrolmentRequest = Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> appConfig.rosmCallbackUrl, "etmpId" -> safeId)
 
     enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
-      logger.info(s"submitSubscription: Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
+      logger.info(s"[ROSMController][submitSubscription] Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId")
 
       enrolRes.status match {
         case NO_CONTENT => success
@@ -126,7 +126,7 @@ class ROSMController @Inject()(override val authConnector: AuthConnector,
         request.getQueryString("subscriptionId").map(id => s", subscriptionId = $id").getOrElse("") +
         request.body.asJson.map(js => s", json = ${js.toString}").getOrElse("")
 
-    logger.warn(s"Received ROSM subscription callback: $logDetails")
+    logger.warn(s"[ROSMController][submitSubscription] Received ROSM subscription callback: $logDetails")
 
     Future.successful(NoContent)
   }
