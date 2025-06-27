@@ -38,10 +38,12 @@ class TaxEnrolmentController @Inject() (override val authConnector: AuthConnecto
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
       connector.enrolmentStatus(groupId)(hc).map {
         response =>
-          logger.info(s"The connector has returned ${response.status} for $groupId")
+          logger.info(s"[TaxEnrolmentController][getSubscriptionsForGroupId] The connector has returned ${response.status} for $groupId")
           Results.Status(response.status)(response.body)
       } recover {
-        case _ => InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
+        case _ =>
+          logger.error(s"[TaxEnrolmentController][getSubscriptionsForGroupId] Dependent systems are currently not responding returing INTERNAL_SERVER_ERROR ")
+          InternalServerError("""{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}""")
       }
     } recover {
       case _ => Unauthorized

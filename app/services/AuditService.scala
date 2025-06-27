@@ -35,7 +35,7 @@ class AuditService @Inject()(val connector: AuditConnector, val appConfig: AppCo
       tags = hc.toAuditTags(auditType, path),
       detail = auditData
     )
-    logger.info(s"audit Config ${connector.auditingConfig}")
+    logger.info(s"[AuditService][audit] : audit Config ${connector.auditingConfig}")
     connector.sendEvent(event)
   }
 
