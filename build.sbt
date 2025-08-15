@@ -29,4 +29,3 @@ ScoverageKeys.coverageHighlighting     := true
 
 scalacOptions += "-Wconf:src=routes/.*:s"
 
-addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle")
