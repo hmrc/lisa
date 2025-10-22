@@ -5,4 +5,5 @@ type: Service
 service-type: Backend
 test-repositories:
   - lisa-api-tests
+  - lisa-performance-tests
   - lisa-frontend-perf-test
