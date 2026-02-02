@@ -47,10 +47,10 @@ class ROSMControllerSpec extends BaseTestSpec {
     when(mockAuthCon.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
   }
 
-  val regPayload: String       =
+  val regPayload: String =
     Source.fromInputStream(getClass.getResourceAsStream("/json/registration_example.json")).mkString
 
-  val regErrorJson: String     = Source.fromInputStream(getClass.getResourceAsStream("/json/utr_error.json")).mkString
+  val regErrorJson: String = Source.fromInputStream(getClass.getResourceAsStream("/json/utr_error.json")).mkString
 
   val subscribePayload: String =
     Source.fromInputStream(getClass.getResourceAsStream("/json/subscription_example.json")).mkString

@@ -29,7 +29,7 @@ import scala.concurrent.{Await, Future}
 import scala.io.Source
 
 class DesConnectorSpec extends BaseTestSpec { // scalastyle:off magic.number
-  val uuid         = "123e4567-e89b-42d3-a456-556642440000"
+  val uuid = "123e4567-e89b-42d3-a456-556642440000"
 
   val desConnector = new DesConnector(mockAppConfig, mockHttpClientV2) {
     override def generateRandomUUID: String = uuid
@@ -168,7 +168,7 @@ class DesConnectorSpec extends BaseTestSpec { // scalastyle:off magic.number
     }
   }
 
-  "add correlation id"    should {
+  "add correlation id" should {
     "request id is not present in the headerCarrier" when {
       "generate random correlation id" in {
         val hc = HeaderCarrier()
