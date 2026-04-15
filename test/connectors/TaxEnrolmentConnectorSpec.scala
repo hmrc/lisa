@@ -30,7 +30,6 @@ class TaxEnrolmentConnectorSpec extends BaseTestSpec {
 
   val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClientV2)
 
-
   "Get enrolment status" should {
     when(mockHttpClientV2.get(any())(any())).thenReturn(mockRequestBuilder)
 
