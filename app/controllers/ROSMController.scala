@@ -36,9 +36,9 @@ class ROSMController @Inject() (
   connector: DesConnector,
   enrolmentConnector: TaxEnrolmentConnector,
   cc: ControllerComponents,
-  implicit val auditService: AuditService,
+  auditService: AuditService,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BackendController(cc: ControllerComponents) with AuthorisedFunctions with Logging {
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
@@ -121,13 +121,13 @@ class ROSMController @Inject() (
     }
   }
 
-  private def submitTaxEnrolmentSubscription(subscriptionId: String, safeId: String, success: Result)(implicit
+  private def submitTaxEnrolmentSubscription(subscriptionId: String, safeId: String, success: Result)(using
     hc: HeaderCarrier
   ): Future[Result] = {
     val enrolmentRequest =
       Json.obj("serviceName" -> "HMRC-LISA-ORG", "callback" -> appConfig.rosmCallbackUrl, "etmpId" -> safeId)
 
-    enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(hc).map { enrolRes =>
+    enrolmentConnector.subscribe(subscriptionId, enrolmentRequest)(using hc).map { enrolRes =>
       logger.info(
         s"[ROSMController][submitSubscription] Tax Enrolments: Response from Connector ${enrolRes.status} for $subscriptionId"
       )
