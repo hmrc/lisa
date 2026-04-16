@@ -43,13 +43,13 @@ class ROSMController @Inject() (
 
   def register(utr: String): Action[AnyContent] = Action.async { implicit request =>
     authorised(AffinityGroup.Organisation and AuthProviders(GovernmentGateway)) {
-      performRegister(utr)(request)
+      performRegister(utr)(using request)
     } recover { case _ =>
       Unauthorized
     }
   }
 
-  private def performRegister(utr: String)(implicit request: Request[AnyContent]): Future[Result] =
+  private def performRegister(utr: String)(using request: Request[AnyContent]): Future[Result] =
     connector.register(utr, request.body.asJson.get).map { response =>
       logger.info(s"[ROSMController][performRegister] The connector has returned ${response.status} for $utr")
       Results.Status(response.status)(response.body)
