@@ -33,7 +33,7 @@ import scala.io.Source
 import scala.util.Using
 
 trait ConnectorSpecHelper
-  extends PlaySpec
+    extends PlaySpec
     with MockitoSugar
     with GuiceOneAppPerSuite
     with WireMockHelper
@@ -42,13 +42,13 @@ trait ConnectorSpecHelper
 
   def applicationBuilder(): GuiceApplicationBuilder = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.des.protocol"          -> "http",
-      "microservice.services.des.host"              -> "localhost",
-      "microservice.services.des.port"              -> server.port(),
-      "microservice.services.tax-enrolments.host"   -> "localhost",
-      "microservice.services.tax-enrolments.port"   -> server.port(),
-      "metrics.enabled"                             -> false,
-      "auditing.enabled"                            -> false
+      "microservice.services.des.protocol"        -> "http",
+      "microservice.services.des.host"            -> "localhost",
+      "microservice.services.des.port"            -> server.port(),
+      "microservice.services.tax-enrolments.host" -> "localhost",
+      "microservice.services.tax-enrolments.port" -> server.port(),
+      "metrics.enabled"                           -> false,
+      "auditing.enabled"                          -> false
     )
 
   override def fakeApplication(): Application = applicationBuilder().build()
@@ -59,7 +59,7 @@ trait ConnectorSpecHelper
     val response: ResponseDefinitionBuilder = aResponse()
       .withStatus(returnStatus)
       .withBody(responseBody)
-    
+
     if (responseBody.nonEmpty) {
       response.withHeader("Content-Type", "application/json")
     } else {
@@ -93,4 +93,5 @@ trait ConnectorSpecHelper
 
   def loadJsonFromResource(path: String): JsValue =
     Json.toJson(loadStringFromResource(path))
+
 }

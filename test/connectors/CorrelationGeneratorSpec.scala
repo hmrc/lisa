@@ -16,12 +16,13 @@
 
 package connectors
 
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.{HeaderCarrier, RequestId}
-import utils.ConnectorSpecHelper
 
 import java.util.UUID
 
-class CorrelationGeneratorSpec extends ConnectorSpecHelper {
+class CorrelationGeneratorSpec extends PlaySpec with MockitoSugar {
 
   private val uuid = UUID.randomUUID().toString
 
@@ -45,9 +46,9 @@ class CorrelationGeneratorSpec extends ConnectorSpecHelper {
         val requestId = "abcd0000-dh12-fg34-ij56"
         val hc        = HeaderCarrier(requestId = Some(RequestId(requestId)))
 
-        val newHc = testClass.addCorrelationId(hc)
-
-        newHc mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> s"$requestId-${uuid.substring(24)}"))
+        testClass.addCorrelationId(hc) mustBe hc.copy(extraHeaders =
+          Seq("CorrelationId" -> s"$requestId-${uuid.substring(24)}")
+        )
       }
     }
 
@@ -56,9 +57,7 @@ class CorrelationGeneratorSpec extends ConnectorSpecHelper {
         val requestId = "1a2b-dh12-fg34-ij56"
         val hc        = HeaderCarrier(requestId = Some(RequestId(requestId)))
 
-        val newHc = testClass.addCorrelationId(hc)
-
-        newHc mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> uuid))
+        testClass.addCorrelationId(hc) mustBe hc.copy(extraHeaders = Seq("CorrelationId" -> uuid))
       }
     }
 
