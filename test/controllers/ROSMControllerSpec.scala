@@ -176,7 +176,7 @@ class ROSMControllerSpec extends BaseTestSpec {
 
       "the call to tax enrolments fails" in {
         when(mockTaxEnrolmentConnector.subscribe(any(), any())(using any()))
-          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, "bad")))
+          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, "error")))
 
         when(mockDesConnector.subscribe(any(), any())(using any()))
           .thenReturn(Future.successful(HttpResponse(ACCEPTED, s"""{"subscriptionId": "928282776"}""")))
