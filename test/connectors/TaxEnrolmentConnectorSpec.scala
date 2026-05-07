@@ -16,112 +16,72 @@
 
 package connectors
 
-import base.BaseTestSpec
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR, NO_CONTENT}
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import utils.ConnectorSpecHelper
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
-class TaxEnrolmentConnectorSpec extends BaseTestSpec {
+class TaxEnrolmentConnectorSpec extends ConnectorSpecHelper {
 
-  val taxEnrolmentConnector = new TaxEnrolmentConnector(mockAppConfig, mockHttpClientV2)
+  given hc: HeaderCarrier    = HeaderCarrier()
+  given ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+
+  lazy val taxEnrolmentConnector: TaxEnrolmentConnector =
+    injector.instanceOf[TaxEnrolmentConnector] // lazy to allow wiremock to start
+
+  private val enrolmentStatusUrl = "/tax-enrolments/groups/Z0192/subscriptions"
+  private val subscribeUrl       = "/tax-enrolments/subscriptions/1234567890/subscriber"
 
   "Get enrolment status" should {
-    when(mockHttpClientV2.get(any())(any())).thenReturn(mockRequestBuilder)
+    "return a success verbatim when a successful response is returned from tax enrolment" in {
+      stubForGet(enrolmentStatusUrl, ACCEPTED, """{"status": "PENDING"}""")
 
-    "return a success verbatim" when {
-      "a successful response is returned from tax enrolment" in {
-        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
-          .thenReturn(
-            Future.successful(
-              HttpResponse(
-                status = ACCEPTED,
-                body = s"""{"status": "PENDING"}"""
-              )
-            )
-          )
-
-        doEnrolmentStatus { response =>
-          response.status             must be(ACCEPTED)
-          Json.parse(response.body) mustBe Json.parse(s"""{"status": "PENDING"}""")
-        }
+      enrolmentStatus { response =>
+        response.status             must be(ACCEPTED)
+        Json.parse(response.body) mustBe Json.parse("""{"status": "PENDING"}""")
       }
     }
-    "return an error verbatim" when {
-      "an error is returned from tax enrolment" in {
-        when(mockHttpClientV2.get(any())(any()).execute[HttpResponse](any(), any()))
-          .thenReturn(
-            Future.successful(
-              HttpResponse(
-                status = INTERNAL_SERVER_ERROR,
-                body = s"""{"code": "INTERNAL_ERROR"}"""
-              )
-            )
-          )
 
-        doEnrolmentStatus { response =>
-          response.status             must be(INTERNAL_SERVER_ERROR)
-          Json.parse(response.body) mustBe Json.parse(s"""{"code": "INTERNAL_ERROR"}""")
-        }
+    "return an error verbatim when an error is returned from tax enrolment" in {
+      stubForGet(enrolmentStatusUrl, INTERNAL_SERVER_ERROR, """{"code": "INTERNAL_ERROR"}""")
+
+      enrolmentStatus { response =>
+        response.status             must be(INTERNAL_SERVER_ERROR)
+        Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
       }
     }
   }
 
   "Subscribe" should {
-    when(mockHttpClientV2.put(any())(any())).thenReturn(mockRequestBuilder)
-    when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+    "return a success verbatim when a successful response is returned from tax enrolment" in {
+      stubForPut(subscribeUrl, NO_CONTENT)
 
-    "return a success verbatim" when {
-      "a successful response is returned from tax enrolment" in {
-        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
-          .thenReturn(
-            Future.successful(
-              HttpResponse(
-                status = NO_CONTENT,
-                body = ""
-              )
-            )
-          )
-
-        doSubscribe { response =>
-          response.status must be(NO_CONTENT)
-          response.body mustBe ""
-        }
+      subscribe { response =>
+        response.status must be(NO_CONTENT)
+        response.body mustBe ""
       }
     }
-    "return an error verbatim" when {
-      "an error is returned from tax enrolment" in {
-        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
-          .thenReturn(
-            Future.successful(
-              HttpResponse(
-                status = INTERNAL_SERVER_ERROR,
-                body = s"""{"code": "INTERNAL_ERROR"}"""
-              )
-            )
-          )
 
-        doSubscribe { response =>
-          response.status             must be(INTERNAL_SERVER_ERROR)
-          Json.parse(response.body) mustBe Json.parse(s"""{"code": "INTERNAL_ERROR"}""")
-        }
+    "return an error verbatim when an error is returned from tax enrolment" in {
+      stubForPut(subscribeUrl, INTERNAL_SERVER_ERROR, """{"code": "INTERNAL_ERROR"}""")
+
+      subscribe { response =>
+        response.status             must be(INTERNAL_SERVER_ERROR)
+        Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
       }
     }
   }
 
-  private def doEnrolmentStatus(callback: HttpResponse => Unit): Unit = {
+  private def enrolmentStatus(callback: HttpResponse => Unit): Unit = {
     val response = Await.result(taxEnrolmentConnector.enrolmentStatus("Z0192"), Duration.Inf)
-
     callback(response)
   }
 
-  private def doSubscribe(callback: HttpResponse => Unit): Unit = {
+  private def subscribe(callback: HttpResponse => Unit): Unit = {
     val response = Await.result(taxEnrolmentConnector.subscribe("1234567890", Json.parse("{}")), Duration.Inf)
-
     callback(response)
   }
 

@@ -19,12 +19,12 @@ package controllers
 import base.BaseTestSpec
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.BearerTokenExpired
-import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.Future
 
@@ -52,8 +52,10 @@ class TaxEnrolmentControllerSpec extends BaseTestSpec {
     }
     "return appropriate 500 internal server error response" when {
       "any errors occur" in {
+        val body = """{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}"""
+
         when(mockTaxEnrolmentConnector.enrolmentStatus(any())(using any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("fail", BAD_REQUEST, BAD_REQUEST)))
+          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, body)))
 
         val res = doGetSubscriptionsForGroupId()
 

@@ -38,8 +38,6 @@ trait BaseTestSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite w
   lazy val mockAuthCon: AuthConnector                       = mock[AuthConnector]
   lazy val controllerComponents: ControllerComponents       = stubControllerComponents()
   lazy val mockAppConfig: AppConfig                         = app.injector.instanceOf[AppConfig]
-  lazy val mockHttpClientV2: HttpClientV2                   = mock[HttpClientV2]
-  lazy val mockRequestBuilder: RequestBuilder               = mock[RequestBuilder]
   lazy val mockAuditService: AuditService                   = mock[AuditService]
 
   given hc: HeaderCarrier = HeaderCarrier()
