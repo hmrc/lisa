@@ -40,15 +40,15 @@ class DesConnector @Inject() (config: AppConfig, httpClientV2: HttpClientV2)(usi
 
   def subscribe(lisaManager: String, payload: JsValue)(using hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$subscriptionUrl/$lisaManager/subscription"
-    httpPost(uri, payload, "subscribe", "subscription")
+    httpPost(uri, payload, "subscribe")
   }
 
   def register(utr: String, payload: JsValue)(using hc: HeaderCarrier): Future[HttpResponse] = {
     val uri = s"$registrationUrl/utr/$utr"
-    httpPost(uri, payload, "register", "registerOnce")
+    httpPost(uri, payload, "register")
   }
 
-  private def httpPost(uri: String, payload: JsValue, urlType: String, connectorLog: String)(using
+  private def httpPost(uri: String, payload: JsValue, connectorLog: String)(using
     hc: HeaderCarrier
   ) = {
     logger.info(s"DES Connector post $connectorLog $uri")
@@ -59,10 +59,6 @@ class DesConnector @Inject() (config: AppConfig, httpClientV2: HttpClientV2)(usi
       .setHeader(desHeaders*)
       .withBody(payload)
       .execute
-      .recover { case e: Exception =>
-        logger.error(s"Error in DesConnector $urlType : ${e.getMessage}")
-        throw e
-      }
   }
 
 }

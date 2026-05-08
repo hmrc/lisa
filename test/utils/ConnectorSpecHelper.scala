@@ -19,6 +19,7 @@ package utils
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import config.AppConfig
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -33,7 +34,7 @@ import scala.io.Source
 import scala.util.Using
 
 trait ConnectorSpecHelper
-    extends PlaySpec
+  extends PlaySpec
     with MockitoSugar
     with GuiceOneAppPerSuite
     with WireMockHelper
@@ -47,19 +48,24 @@ trait ConnectorSpecHelper
       "microservice.services.des.port"            -> server.port(),
       "microservice.services.tax-enrolments.host" -> "localhost",
       "microservice.services.tax-enrolments.port" -> server.port(),
+      "desauthtoken"                              -> "test-auth-token",
+      "environment"                               -> "test-env",
       "metrics.enabled"                           -> false,
       "auditing.enabled"                          -> false
     )
 
   override def fakeApplication(): Application = applicationBuilder().build()
 
-  lazy val injector: Injector = app.injector
+  lazy val injector: Injector   = app.injector
+  lazy val appConfig: AppConfig = injector.instanceOf[AppConfig]
+
+  val uuidPattern: String =
+    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
   def buildResponse(returnStatus: Int, responseBody: String = ""): ResponseDefinitionBuilder = {
     val response: ResponseDefinitionBuilder = aResponse()
       .withStatus(returnStatus)
       .withBody(responseBody)
-
     if (responseBody.nonEmpty) {
       response.withHeader("Content-Type", "application/json")
     } else {

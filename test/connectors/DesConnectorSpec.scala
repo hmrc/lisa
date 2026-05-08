@@ -21,11 +21,10 @@ import com.github.tomakehurst.wiremock.http.Fault
 import play.api.http.Status.{ACCEPTED, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.ConnectorSpecHelper
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 
 class DesConnectorSpec extends ConnectorSpecHelper {
 
@@ -41,23 +40,29 @@ class DesConnectorSpec extends ConnectorSpecHelper {
 
   "Subscription endpoint" should {
     "Return a status 202 when valid json posted" in {
+      val payload = loadJsonFromResource("/json/subscription_example.json")
       stubForPost(subscribeUrl, ACCEPTED, """{"SubscriptionID": "928282776"}""")
 
-      subscribe { response =>
-        response.status must be(ACCEPTED)
-      }
+      val response = await(desConnector.subscribe("Z019283", payload))
+
+      response.status           mustBe ACCEPTED
+      Json.parse(response.body) mustBe Json.parse("""{"SubscriptionID": "928282776"}""")
+      verifyDesPost(subscribeUrl, payload)
     }
 
     "Return a status 503 when invalid json posted" in {
-      stubForPost(
-        subscribeUrl,
-        SERVICE_UNAVAILABLE,
-        """{ "code": "SERVICE_UNAVAILABLE", "reason": "Dependent systems are currently not responding." }"""
+      val payload   = Json.toJson(
+        loadStringFromResource("/json/subscription_example.json").replace("utr", "otr")
       )
+      val errorBody =
+        """{ "code": "SERVICE_UNAVAILABLE", "reason": "Dependent systems are currently not responding." }"""
+      stubForPost(subscribeUrl, SERVICE_UNAVAILABLE, errorBody)
 
-      invalidSubscribe { response =>
-        response.status must be(SERVICE_UNAVAILABLE)
-      }
+      val response = await(desConnector.subscribe("Z019283", payload))
+
+      response.status           mustBe SERVICE_UNAVAILABLE
+      Json.parse(response.body) mustBe Json.parse(errorBody)
+      verifyDesPost(subscribeUrl, payload)
     }
 
     "Return an exception when the upstream connection fails" in {
@@ -71,10 +76,9 @@ class DesConnectorSpec extends ConnectorSpecHelper {
   }
 
   "Registration endpoint" should {
-    "Return a status 200 when Valid json posted" in {
-      stubForPost(
-        registerUrl,
-        OK,
+    "Return a status 200 when valid json posted" in {
+      val payload      = loadJsonFromResource("/json/registration_example.json")
+      val responseJson =
         """{
             |  "safeId": "XE0001234567890",
             |  "agentReferenceNumber": "AARN1234567",
@@ -102,23 +106,30 @@ class DesConnectorSpec extends ConnectorSpecHelper {
             |    "emailAddress": "stephen@manncorpone.co.uk"
             |  }
             |}""".stripMargin
-      )
 
-      register { response =>
-        response.status must be(OK)
-      }
+      stubForPost(registerUrl, OK, responseJson)
+
+      val response = await(desConnector.register("Z019283", payload))
+
+      response.status           mustBe OK
+      Json.parse(response.body) mustBe Json.parse(responseJson)
+      verifyDesPost(registerUrl, payload)
     }
 
     "Return a status 503 when invalid json posted" in {
-      stubForPost(
-        registerUrl,
-        SERVICE_UNAVAILABLE,
-        """{ "code": "SERVICE_UNAVAILABLE", "reason": "Dependent systems are currently not responding." }"""
+      val payload   = Json.toJson(
+        loadStringFromResource("/json/registration_example.json").replace("utr", "otr")
       )
+      val errorBody =
+        """{ "code": "SERVICE_UNAVAILABLE", "reason": "Dependent systems are currently not responding." }"""
 
-      invalidRegister { response =>
-        response.status must be(SERVICE_UNAVAILABLE)
-      }
+      stubForPost(registerUrl, SERVICE_UNAVAILABLE, errorBody)
+
+      val response = await(desConnector.register("Z019283", payload))
+
+      response.status           mustBe SERVICE_UNAVAILABLE
+      Json.parse(response.body) mustBe Json.parse(errorBody)
+      verifyDesPost(registerUrl, payload)
     }
 
     "Return an exception when the upstream connection fails" in {
@@ -131,36 +142,13 @@ class DesConnectorSpec extends ConnectorSpecHelper {
     }
   }
 
-  private def subscribe(callback: HttpResponse => Unit): Unit = {
-    val jsVal: JsValue = loadJsonFromResource("/json/subscription_example.json")
-
-    val response = Await.result(desConnector.subscribe("Z019283", jsVal), Duration.Inf)
-    callback(response)
-  }
-
-  private def register(callback: HttpResponse => Unit): Unit = {
-    val jsVal: JsValue = loadJsonFromResource("/json/registration_example.json")
-
-    val response = Await.result(desConnector.register("Z019283", jsVal), Duration.Inf)
-    callback(response)
-  }
-
-  private def invalidSubscribe(callback: HttpResponse => Unit): Unit = {
-    val jsVal: JsValue = Json.toJson(
-      loadStringFromResource("/json/subscription_example.json").replace("utr", "otr")
+  def verifyDesPost(url: String, expectedBody: JsValue): Unit =
+    server.verify(
+      postRequestedFor(urlEqualTo(url))
+        .withHeader("Environment", equalTo(appConfig.desUrlHeaderEnv))
+        .withHeader("Authorization", equalTo(s"Bearer ${appConfig.desAuthToken}"))
+        .withHeader("CorrelationId", matching(uuidPattern))
+        .withRequestBody(equalToJson(expectedBody.toString))
     )
-
-    val response = Await.result(desConnector.subscribe("Z019283", jsVal), Duration.Inf)
-    callback(response)
-  }
-
-  private def invalidRegister(callback: HttpResponse => Unit): Unit = {
-    val jsVal: JsValue = Json.toJson(
-      loadStringFromResource("/json/registration_example.json").replace("utr", "otr")
-    )
-
-    val response = Await.result(desConnector.register("Z019283", jsVal), Duration.Inf)
-    callback(response)
-  }
 
 }

@@ -16,21 +16,23 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR, NO_CONTENT}
-import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import play.api.libs.json.{JsValue, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.ConnectorSpecHelper
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 
 class TaxEnrolmentConnectorSpec extends ConnectorSpecHelper {
 
   given hc: HeaderCarrier    = HeaderCarrier()
   given ec: ExecutionContext = injector.instanceOf[ExecutionContext]
 
-  lazy val taxEnrolmentConnector: TaxEnrolmentConnector =
-    injector.instanceOf[TaxEnrolmentConnector] // lazy to allow wiremock to start
+  // lazy to allow wiremock to start
+  lazy val taxEnrolmentConnector: TaxEnrolmentConnector = injector.instanceOf[TaxEnrolmentConnector]
 
   private val enrolmentStatusUrl = "/tax-enrolments/groups/Z0192/subscriptions"
   private val subscribeUrl       = "/tax-enrolments/subscriptions/1234567890/subscriber"
@@ -39,50 +41,59 @@ class TaxEnrolmentConnectorSpec extends ConnectorSpecHelper {
     "return a success verbatim when a successful response is returned from tax enrolment" in {
       stubForGet(enrolmentStatusUrl, ACCEPTED, """{"status": "PENDING"}""")
 
-      enrolmentStatus { response =>
-        response.status             must be(ACCEPTED)
-        Json.parse(response.body) mustBe Json.parse("""{"status": "PENDING"}""")
-      }
+      val response = await(taxEnrolmentConnector.enrolmentStatus("Z0192"))
+
+      response.status           mustBe ACCEPTED
+      Json.parse(response.body) mustBe Json.parse("""{"status": "PENDING"}""")
+      verifyTaxEnrolmentGet(enrolmentStatusUrl)
     }
 
     "return an error verbatim when an error is returned from tax enrolment" in {
       stubForGet(enrolmentStatusUrl, INTERNAL_SERVER_ERROR, """{"code": "INTERNAL_ERROR"}""")
 
-      enrolmentStatus { response =>
-        response.status             must be(INTERNAL_SERVER_ERROR)
-        Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
-      }
+      val response = await(taxEnrolmentConnector.enrolmentStatus("Z0192"))
+
+      response.status           mustBe INTERNAL_SERVER_ERROR
+      Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
+      verifyTaxEnrolmentGet(enrolmentStatusUrl)
     }
   }
 
   "Subscribe" should {
     "return a success verbatim when a successful response is returned from tax enrolment" in {
-      stubForPut(subscribeUrl, NO_CONTENT)
+      val payload = Json.parse("{}")
+      stubForPut(subscribeUrl, NO_CONTENT, "")
 
-      subscribe { response =>
-        response.status must be(NO_CONTENT)
-        response.body mustBe ""
-      }
+      val response = await(taxEnrolmentConnector.subscribe("1234567890", payload))
+
+      response.status mustBe NO_CONTENT
+      response.body   mustBe ""
+      verifyTaxEnrolmentPut(subscribeUrl, payload)
     }
 
     "return an error verbatim when an error is returned from tax enrolment" in {
       stubForPut(subscribeUrl, INTERNAL_SERVER_ERROR, """{"code": "INTERNAL_ERROR"}""")
 
-      subscribe { response =>
-        response.status             must be(INTERNAL_SERVER_ERROR)
-        Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
-      }
+      val payload = Json.parse("{}")
+      val response = await(taxEnrolmentConnector.subscribe("1234567890", payload))
+
+      response.status           mustBe INTERNAL_SERVER_ERROR
+      Json.parse(response.body) mustBe Json.parse("""{"code": "INTERNAL_ERROR"}""")
+      verifyTaxEnrolmentPut(subscribeUrl, payload)
     }
   }
 
-  private def enrolmentStatus(callback: HttpResponse => Unit): Unit = {
-    val response = Await.result(taxEnrolmentConnector.enrolmentStatus("Z0192"), Duration.Inf)
-    callback(response)
-  }
+  def verifyTaxEnrolmentGet(url: String): Unit =
+    server.verify(
+      getRequestedFor(urlEqualTo(url))
+        .withHeader("CorrelationId", matching(uuidPattern))
+    )
 
-  private def subscribe(callback: HttpResponse => Unit): Unit = {
-    val response = Await.result(taxEnrolmentConnector.subscribe("1234567890", Json.parse("{}")), Duration.Inf)
-    callback(response)
-  }
+  def verifyTaxEnrolmentPut(url: String, expectedBody: JsValue): Unit =
+    server.verify(
+      putRequestedFor(urlEqualTo(url))
+        .withHeader("CorrelationId", matching(uuidPattern))
+        .withRequestBody(equalToJson(expectedBody.toString))
+    )
 
 }
