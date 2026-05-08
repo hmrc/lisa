@@ -73,7 +73,7 @@ class TaxEnrolmentControllerSpec extends BaseTestSpec {
 
         val res = getSubscriptionsForGroupId()
 
-        status(res) mustBe INTERNAL_SERVER_ERROR
+        status(res)        mustBe INTERNAL_SERVER_ERROR
         contentAsJson(res) mustBe Json.parse(
           """{"code":"INTERNAL_SERVER_ERROR","reason":"Dependent systems are currently not responding"}"""
         )
@@ -90,8 +90,6 @@ class TaxEnrolmentControllerSpec extends BaseTestSpec {
         status(res) mustBe UNAUTHORIZED
       }
     }
-
-
 
   }
 
