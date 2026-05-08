@@ -14,7 +14,6 @@
     <logger name="org.asynchttpclient.netty.channel" level="WARN"/>
 
     <root level="DEBUG">
-        <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
