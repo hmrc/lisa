@@ -34,7 +34,7 @@ import scala.io.Source
 import scala.util.Using
 
 trait ConnectorSpecHelper
-  extends PlaySpec
+    extends PlaySpec
     with MockitoSugar
     with GuiceOneAppPerSuite
     with WireMockHelper

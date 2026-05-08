@@ -74,7 +74,7 @@ class TaxEnrolmentConnectorSpec extends ConnectorSpecHelper {
     "return an error verbatim when an error is returned from tax enrolment" in {
       stubForPut(subscribeUrl, INTERNAL_SERVER_ERROR, """{"code": "INTERNAL_ERROR"}""")
 
-      val payload = Json.parse("{}")
+      val payload  = Json.parse("{}")
       val response = await(taxEnrolmentConnector.subscribe("1234567890", payload))
 
       response.status           mustBe INTERNAL_SERVER_ERROR
